@@ -1,9 +1,9 @@
 %time step 
-steps = 1000;
+steps = 500;
 
-%create agents 
-a1 = %dummy agent for now
-agent = a1; %set agent type 
+%create agents (there's nothing really happening here right now)
+%dummy agent for now
+%agent = a1; %set agent type 
 
 
 %create trajectory
@@ -15,11 +15,11 @@ location(1,:) = [0,0]; %start at center XY
 directions = ['N','S','E','W']; 
 
 for t=2:steps 
-    quality = %landscape(curr_location(quality)) %assess quality of the food 
-    decide_to_stay %some function(quality, etc.) 
+    quality = 1 ;%landscape(curr_location(quality)) %assess quality of the food 
+    decide_to_stay = nbinrnd(1,0.66);%some function(quality, etc.) . randomly setting it to move 2/3 of the time with neg binomial for now.
     if decide_to_stay==1 
         location(t,:) = curr_location;
-    else 
+    elseif decide_to_stay == 0  
         direction = datasample(directions,1);
         if direction == 'N'
             location(t,: )= [location(t-1,1), location(t-1,2)+1];
@@ -33,8 +33,14 @@ for t=2:steps
         elseif direction == 'W'
             location(t,: )= [location(t-1,1)-1, location(t-1,2)];
             curr_location = location(t, :);  
-    end 
+        end 
+    
+        
+    end
     
     
+ end
     
-    end 
+    
+ 
+plot(location(:,1), location(:,2))
