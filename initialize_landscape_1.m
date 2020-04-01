@@ -1,7 +1,16 @@
 %{
 Initialize landscape for Doak-Peleg rotation project with
 Liam Friar, Jack Gugel, Ellen Waddle, and Tristan Caro.
-More description in "feed_1.m" (may change)
+
+Landscape is a square grid. Agents can move at a finer scale.
+Each point on grid stores visitation/dung count, current grass quantity,
+nutritional quality.
+Location of termite mounds or fertilization patches will be an initial
+input, and initial attributes of grid points will be determined from those
+inputs.
+
+Note: x dimension refers to column, and y dimension to row. X dimension
+increases left to right, Y dimension top to bottom.
 %}
 
 function landscape = initialize_landscape_1(x_dim, y_dim, fertilizer_xy)
