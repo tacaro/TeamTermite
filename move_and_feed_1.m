@@ -26,7 +26,7 @@ grid spaces of the edge of the landscape array.
     
 
 
-function [landscape, grass_consumed, nutrition, leave] = move_and_feed_1(landscape, x1, y1,...
+feed_function = function [landscape, grass_consumed, nutrition, leave] = move_and_feed_1(landscape, x1, y1,...
     x2, y2, boundary, feed_amount, feed_time)
 
 %MOVE
