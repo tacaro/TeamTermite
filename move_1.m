@@ -63,14 +63,13 @@ else
     crossing_array = round(crossing_array, 2);
         %Rounding is to avoid small differences in calculating a duplicate
         %point in multiple ways from hiding that duplicate point.
-    for pp = 2 : total_crossings + 2 
+    i_array = sort([2:size(crossing_array, 1)], 'descend');
+    for pp = i_array
         if crossing_array(pp, 1) == crossing_array(pp-1, 1) && ...
                 crossing_array(pp, 2) == crossing_array(pp-1, 2)
             crossing_array(pp, :) = [];    
         end
     end
-      %I think the most fool-proof way to do the above for loop would be
-      %with a recursive call, but I think this should work as 
 
  
 %Create array of landscape coords of gridsquares crossed, and distance
