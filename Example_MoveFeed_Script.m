@@ -34,6 +34,7 @@ feed_time = 1;
 [landscape, grass_consumed, nutrition, leave] = move_and_feed_1(landscape,...
     x1, y1, x2, y2, boundary, feed_amount, feed_time);
 
+
 disp("LEAVE??? ");
 disp(leave);
 disp("how much did I eat???");
