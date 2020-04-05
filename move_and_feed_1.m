@@ -31,7 +31,7 @@ function [landscape, grass_consumed, nutrition, leave] = move_and_feed_1(landsca
 
 %MOVE
 
-path_array = move_1(x1, y1, x2, y2);
+path_array = move_1(x1, y1, x2, y2)
 num_squares = size(path_array, 1);
 for square = 1:num_squares
     xx = path_array(square, 1);

@@ -7,7 +7,7 @@ fertilizer_xy = [1,1;2,2;6,5;39,31;49,43;29,39]; %made up for now.
 xdim = 50
 ydim = 50
 
-xx = 50 
+xx = 50 %%what are xx and yy?
 yy = 50
 landscape = initialize_landscape_1(xdim,ydim, fertilizer_xy);
 

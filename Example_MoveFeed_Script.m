@@ -27,7 +27,7 @@ disp(grass_quantity);
 %if it has exited the boundary region using move_and_feed_1 which calls
 %move_1.
 
-x2 = 4;
+x2 = 1;
 y2 = 7;
 boundary = 2;
 feed_amount = 5;
