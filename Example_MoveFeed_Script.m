@@ -1,3 +1,5 @@
+
+
 %{
 Example script using initializa_landscape_1, current_location,
 move_and_feed_1, move_1
@@ -42,7 +44,3 @@ disp("Updated grass landscape: ");
 disp(landscape(:,:,1));
 disp("Is there poop now???");
 disp(landscape(:,:,3));
-
-
-
-
