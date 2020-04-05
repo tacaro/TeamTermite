@@ -12,15 +12,15 @@ Output: a 3-column array with rows in order as path traveled. Columns:
 function path_array = move_1(x1, y1, x2, y2)
 
 %round coordinates for landscape grid.
-x1_round = round(x1)
-x2_round = round(x2)
-y1_round = round(y1)
-y2_round = round(y2)
+x1_round = round(x1);
+x2_round = round(x2);
+y1_round = round(y1);
+y2_round = round(y2);
 
-num_x_crossings = abs(x2_round-x1_round)
-num_y_crossings = abs(y2_round-y1_round)
-total_crossings = num_x_crossings + num_y_crossings
-total_distance = sqrt((x2 - x1)^2 + (y2 - y1)^2)
+num_x_crossings = abs(x2_round-x1_round);
+num_y_crossings = abs(y2_round-y1_round);
+total_crossings = num_x_crossings + num_y_crossings;
+total_distance = sqrt((x2 - x1)^2 + (y2 - y1)^2);
 
 if total_crossings == 0
     %animal did not move grid squares!
@@ -30,7 +30,7 @@ else
     %animal moved to new grid square
     x_direction = sign(x2_round-x1_round);
     y_direction = sign(y2_round-y1_round);
-    slope = (y2-y1)/(x2-x1)
+    slope = (y2-y1)/(x2-x1);
     
     crossing_array = zeros(2+total_crossings, 2);
     %Each row will be x, y. Contains end points and all points that cross a

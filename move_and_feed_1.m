@@ -29,9 +29,25 @@ grid spaces of the edge of the landscape array.
 function [landscape, grass_consumed, nutrition, leave] = move_and_feed_1(landscape, x1, y1,...
     x2, y2, boundary, feed_amount, feed_time)
 
-%MOVE
 
-path_array = move_1(x1, y1, x2, y2)
+
+%LEAVE?
+
+if (x2 + boundary) > size(landscape, 2) || ...
+        (x2 - boundary) < 1 || (y2 + boundary) > size(landscape,1) || ...
+        (y2 - boundary) < 1
+    leave = true;
+    grass_consumed = 0;
+    nutrition = 0;
+    return
+    %does not record animal's path as it exists (would be easy to add)
+else
+    leave = false;
+end
+
+%Move
+
+path_array = move_1(x1, y1, x2, y2);
 num_squares = size(path_array, 1);
 for square = 1:num_squares
     xx = path_array(square, 1);
@@ -42,7 +58,6 @@ end
 
 
 %FEED
-
 x_f = path_array(num_squares, 1);
 y_f = path_array(num_squares, 2);
 %I define x_f and y_F instead of x2 and y2 in the case that x2 or y2 is
@@ -52,17 +67,6 @@ nutrition = landscape(y_f, x_f, 2);
 grass_consumed = min(grass, feed_amount);
 landscape(y_f, x_f, 1) = grass - grass_consumed;
 landscape(y_f, x_f, 3) = landscape(y_f, x_f, 3) + feed_time;
-
-
-%LEAVE?
-
-if (x_f + boundary) > size(landscape, 2) || ...
-        (x_f - boundary) < 1 || (y_f + boundary) > size(landscape,1) || ...
-        (y_f - boundary) < 1
-    leave = true;
-else
-    leave = false;
-end
 
 
 
