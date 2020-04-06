@@ -24,7 +24,7 @@ num_animals = 10;
 
 %Record trajectory of all animals. First two columns are first animal,
 %third and fourth columns are second animal, etc.
-location = zeros(steps, 2*num_animals);
+location = zeros(steps+1, 2*num_animals);
 
 
 
@@ -73,6 +73,10 @@ for animal = 1:num_animals
         [landscape, grass_consumed, nutrition, leave] = move_and_feed_1(landscape,...
                 x1, y1, x2, y2, boundary, feed_amount, feed_time);
         if leave == 1
+            for remaining_steps = t+1 : steps+1
+                location(remaining_steps, animal_x : animal_y) = ...
+                    location(t, animal_x : animal_y);
+            end
             break
             %ends "t" loop. returns to "animal" loop.
         end
