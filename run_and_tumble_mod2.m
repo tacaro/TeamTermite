@@ -126,10 +126,11 @@ for animal = 1:num_animals
             pts = [mound; curr_location];
             mound_dists(m) = pdist(pts, 'euclidean');
         end 
+        
         dist_to_closest_mound(t, animal) = min(mound_dists);
         
         %calculate dist to nearest boundary
-        boundary_line =
+        %%% yet to be done. hmm. what is easiest way to do this?
         
         if leave == 1
             for remaining_steps = t+1 : steps+1
@@ -139,9 +140,6 @@ for animal = 1:num_animals
         break
             %ends "t" loop. returns to "animal" loop.
        
-            
-            
-            
        end
             
     end
