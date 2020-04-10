@@ -27,7 +27,7 @@ grid spaces of the edge of the landscape array.
 
 
 function [landscape, grass_consumed, nutrition, x_stop, y_stop, leave] = move_and_feed_1(landscape, x1, y1,...
-    x2, y2, boundary, feed_amount, feed_time, fullness)
+    x2, y2, boundary, feed_amount, feed_time, stop_grass, fullness)
 
 
 
@@ -50,7 +50,7 @@ end
 %MOVE
 
 [path_array, crossing_array] = move_1(x1, y1, x2, y2);
-[path_array, leave, x_stop, y_stop] = check_path(landscape(:,:,1), path_array, crossing_array, fullness, boundary);
+[path_array, leave, x_stop, y_stop] = check_path(landscape(:,:,1), path_array, crossing_array, fullness, stop_grass, boundary);
 num_squares = size(path_array, 1);
 for square = 1:num_squares
     xx = path_array(square, 1);

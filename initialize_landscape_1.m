@@ -13,7 +13,7 @@ Note: x dimension refers to column, and y dimension to row. X dimension
 increases left to right, Y dimension top to bottom.
 %}
 
-function landscape = initialize_landscape_1(x_dim, y_dim, fertilizer_xy)
+function landscape = initialize_landscape_1(x_dim, y_dim, fertilizer_xy, max_food)
 %fertilizer_xy is a nx2 array of x-y points
 
 validateattributes(x_dim,{'numeric'},{'integer', 'positive'});
@@ -58,10 +58,10 @@ end
 %to closest mound.
 
 %grasscount
-landscape(:,:,1) = round(100./(landscape(:,:,1)+1));
+landscape(:,:,1) = round(max_food./(landscape(:,:,1)+1));
 
 %Nutritional value
-landscape(:,:,2) = round(100./(landscape(:,:,2)+1));
+landscape(:,:,2) = round(max_food./(landscape(:,:,2)+1));
 
 
 end

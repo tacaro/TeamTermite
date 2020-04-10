@@ -65,11 +65,10 @@ for animal = 1:num_animals
         y1 = curr_location(2);
         [grass_quantity, nutrition] = current_location(landscape,x1, y1);
 
-        if  1 == 2
-            %grass_quantity > stay_grass && nutrition > stay_nutrition
+        if  grass_quantity > stay_grass && nutrition > stay_nutrition
             %disp('stay')
-            %x2 = x1;
-            %y2 = y1;
+            x2 = x1;
+            y2 = y1;
              
         else
            % disp('move')
