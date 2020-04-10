@@ -82,7 +82,7 @@ for animal = 1:num_animals
     starting_pos = [astart,bstart ; bstart,astart ]; 
     start_pos = starting_pos(:,randi(2,1));
    
-    %Start animals in from edge.
+    %Set starting directions.
     if start_pos(1) == 1+boundary
         direction = (-pi/2) + (pi*rand);
     elseif start_pos(1) == xdim-boundary
@@ -114,14 +114,16 @@ for animal = 1:num_animals
             y2 = y1;
             
         else
-            if fullness < 5 %if hungry, turns are wider. 
+            %Choose turn size
+            %Could try making tumble just pi + run angles
+            if fullness < 5 %if hungry, turns are narrower. 
                 turning_angle = unifrnd(-max_turn_angle/angle_ratio, max_turn_angle/angle_ratio);
             else 
                 turning_angle = unifrnd(-max_turn_angle, max_turn_angle); 
             end 
             direction = rem(direction + turning_angle, (2*pi)); %take remainder so always between [-2*pi, 2*pi] so easier to look at.
             
-            
+            %Choose movement distant
             if nutrition < run_nutrition %move farther if nutrition is low
                 d = unifrnd(min_run, max_run); %uniform dist of step size
             else  %stay closer if nutrition is high

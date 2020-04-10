@@ -21,6 +21,7 @@ for square = 1:num_squares
     xx = path_array(square, 1);
     yy = path_array(square, 2);
     
+    %This is another arbitrary threshold.
     if grass_scape(yy, xx) > stop_grass %Make this connect to parameters from top of run_and_tumble
         path_array( (square + 1 : num_squares), : ) = [];
         path_array(square, 3) = path_array(square, 3)/2;
