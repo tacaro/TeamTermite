@@ -25,7 +25,7 @@ run_nutrition = 3;
 %%%landscape parameters (dimension, # animals, mound placement) 
 xdim = 50;
 ydim = 50;  
-n_mounds = 2; % number of termite mounds
+n_mounds = 5; % number of termite mounds
 
 steps = 100; %set max time steps
 num_animals = 10;%set number of animals to walk the Earth
@@ -53,6 +53,7 @@ landscape = initialize_landscape_1(xdim, ydim, fertilizer_xy);
 trajectories = zeros(steps, 2*num_animals);
 time_until_leaving = zeros(num_animals,1); %record time animal leaves
 dist_to_closest_mound = zeros(steps, num_animals);
+proximity_to_boundary = zeros(steps, num_animals); 
 
 curr_location = zeros(1,2);
 
@@ -73,6 +74,7 @@ for animal = 1:num_animals
     %initialize. Goes to 1 when animal leaves boundary on landscape.
     leave = 0;
     fullness = init_fullness;
+    
     for t=1:steps
         
         curr_location = trajectories(t, animal_x : animal_y);
@@ -119,28 +121,39 @@ for animal = 1:num_animals
         trajectories(t+1, animal_x : animal_y) = [x_stop, y_stop]; %update location
         fullness = fullness + grass_consumed - energy_spent;
        
-                %calculate distance to nearest mound        
+        %calculate distance to nearest mound        
         mound_dists = zeros(n_mounds,1);
         for m = 1:n_mounds 
             mound = fertilizer_xy(m,:);
-            pts = [mound; curr_location];
+            pts = [mound; x2,y2];
             mound_dists(m) = pdist(pts, 'euclidean');
         end 
         
         dist_to_closest_mound(t, animal) = min(mound_dists);
-
+        
+        %calculate distance to nearest boundary
+        dist_to_boundary = [x2; xdim - x2; y2; ydim - y2]; 
+        proximity_to_boundary(t, animal) = min(dist_to_boundary);
             
     end
 
 end
 
-%{
+
 %%% visualization 
 
 %time spent on landscape
 hist(time_until_leaving,num_animals/5)
 title('time steps spent in simluation')
 
+%distance to nearest boundary
+hold on 
+for animal = 1:num_animals
+    plot(1:steps, proximity_to_boundary(:, animal))
+    
+end 
+title('distance to boundary thru time')
+hold off 
 
 %plot distance to mound center through time for each animal
 hold on 
@@ -189,4 +202,4 @@ for animal = 1:num_animals
 end 
 title('dung location pileups');
 hold off 
-%}
+
