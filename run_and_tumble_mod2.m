@@ -44,11 +44,12 @@ if fertilizer_pattern == 1
     fertilizer_xy = round([X(:), Y(:)]);
     n_mounds = size(fertilizer_xy, 1);
 elseif fertilizer_pattern == 0
-    random_fert = [randi([1 xdim],1,n_mounds) ; randi([1 ydim],1,n_mounds)];
-    fertilizer_xy = transpose(random_fert);
-    %fert_x = randi([(1+boundary), (xdim - boundary)], 1, n_mounds);
-    %fert_y = randi([(1+boundary), (ydim - boundary)], 1, n_mounds);
-    %fertilizer_xy = transpose( [fert_x; fert_y]);
+    %random_fert = [randi([1 xdim],1,n_mounds) ; randi([1 ydim],1,n_mounds)];
+    %fertilizer_xy = transpose(random_fert);
+    %Above allows fertilizer patches outside the boundary.
+    fert_x = randi([(1+boundary), (xdim - boundary)], 1, n_mounds);
+    fert_y = randi([(1+boundary), (ydim - boundary)], 1, n_mounds);
+    fertilizer_xy = transpose( [fert_x; fert_y]);
 end 
 
 
