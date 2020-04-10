@@ -21,7 +21,7 @@ for square = 1:num_squares
     xx = path_array(square, 1);
     yy = path_array(square, 2);
     
-    if grass_scape(yy, xx) > fullness
+    if grass_scape(yy, xx) > 30; %Make this connect to parameters from top of run_and_tumble
         path_array( (square + 1 : num_squares), : ) = [];
         path_array(square, 3) = path_array(square, 3)/2;
         %path_array ends halfway through stopping patch.
@@ -32,8 +32,6 @@ for square = 1:num_squares
         y_f = crossing_array(square+1, 2);
         x_stop = (x_i + x_f) / 2;
         y_stop = (y_i + y_f) / 2;
-        disp("stop");
-        disp(x_stop);, disp(y_stop);
         break
     elseif (xx + boundary) > size(grass_scape, 2) || ...
         (xx - boundary) < 1 || (yy + boundary) > size(grass_scape, 1) || ...
@@ -42,8 +40,6 @@ for square = 1:num_squares
         x_stop = crossing_array(square, 1);
         y_stop = crossing_array(square, 2);
         leave = 1;
-        disp("leave");
-        disp(xx);, disp(yy);
         break
     end
     
