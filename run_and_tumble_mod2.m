@@ -31,7 +31,7 @@ max_food = 100; %starting grass/nutrition level for fertilizer patches
 
 steps = 100; %set max time steps
 num_animals = 10;%set number of animals to walk the Earth
-fertilizer_pattern = 1;  %can be 0: random or 1: uniform. 
+fertilizer_pattern = 1;  %can be 0: random or 1: uniform.
 
 
 %set up fertilizer mound locations
@@ -55,6 +55,8 @@ end
 
 %ready to initialize landscape
 landscape = initialize_landscape_1(xdim, ydim, fertilizer_xy, max_food);
+% Preallocate dataframe to track food concentration over time
+landscape_time = zeros(xdim, ydim, steps);
 
 
 %STEP2: agents move through landscape.
@@ -228,7 +230,7 @@ surf(landscape(:, :, 3));zz =transpose(linspace(100,100,length(trajectories(:,2)
 hold on
 for animal = 1:num_animals
     xx = 2*animal - 1;
-    yy = xx+1;
+    yy = xx + 1;
     plot3(trajectories(:,xx,1), trajectories(:,yy,1),zz)
 end 
 title('dung location pileups');
