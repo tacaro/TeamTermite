@@ -1,4 +1,4 @@
-
+%% Model Script
 %Set variable model parameters
 %%%%grazing parameters
 feed_time = 1; %relative to total movement time (of 1)
@@ -31,7 +31,7 @@ max_food = 100; %starting grass/nutrition level for fertilizer patches
 
 steps = 100; %set max time steps
 num_animals = 10;%set number of animals to walk the Earth
-fertilizer_pattern = 1;  %can be 0: random or 1: uniform. 
+fertilizer_pattern = 1;  %can be 0: random or 1: uniform.
 
 
 %set up fertilizer mound locations
@@ -55,6 +55,9 @@ end
 
 %ready to initialize landscape
 landscape = initialize_landscape_1(xdim, ydim, fertilizer_xy, max_food);
+landscape_before_run = landscape; % take snapshot of first frame for later reference
+% Preallocate dataframe to track food concentration over time
+landscape_time = zeros(xdim, ydim, steps);
 
 
 %STEP2: agents move through landscape.
@@ -174,8 +177,10 @@ end
 %%% visualization 
 
 %time spent on landscape
+hold on
 hist(time_until_leaving,num_animals/5)
 title('time steps spent in simluation')
+hold off
 
 %distance to nearest boundary
 figure
@@ -230,9 +235,28 @@ surf(landscape(:, :, 3));zz =transpose(linspace(100,100,length(trajectories(:,2)
 hold on
 for animal = 1:num_animals
     xx = 2*animal - 1;
-    yy = xx+1;
+    yy = xx + 1;
     plot3(trajectories(:,xx,1), trajectories(:,yy,1),zz)
 end 
 title('dung location pileups');
 hold off 
+
+%% Additional Plotting
+% dung vs. nutrition scatterplot
+ % turning the landscape vals of quantity and dung into column vectors
+ % using the first frame of landscape
+quant = reshape(landscape_before_run(:,:,1), 1, []);
+dng = reshape(landscape(:,:,3), 1, []);
+
+coefficients = polyfit(quant, dng, 1);
+xFit = linspace(min(quant), max(quant), 1000);
+yFit = polyval(coefficients , xFit);
+hold on;
+plot(xFit, yFit, 'r-', 'LineWidth', 2);
+grid on;
+scatter(quant, dng) % plot nutrient on x, dng on y
+title('Total dung counts vs. initial nutrient quantity')
+xlabel('Grass count')
+ylabel('Dung Count')
+hold off
 
