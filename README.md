@@ -14,3 +14,7 @@ Current working script: run_and_tumble_mod2.m
 - Data to collect: residence time in/outside of patches, dung counts, run/tumble ratio.
 - Save trajectories, agent internal state, and landscape snapshots for post-processing!
 - Animations!
+
+Notes on model:
+- Have the agents remove less grass. Current might lead to idiosyncratic behavior between agents.
+- Set z values of trajectories to be super high so they are always on top of the heatmap plot.
