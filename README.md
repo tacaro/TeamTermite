@@ -1,7 +1,7 @@
 # TeamTermite
 Agent based model of ungulate grazing amid nutrient-rich termite mounds
 
-Current working script: run_and_tumble_mod2.m
+Current working script: **run_and_tumble_mod2.m**
 
 **4/13 Meeting Notes**
 - Change mound shape from point source with decreasing quantity in favor of "step-function" where there are high quality and low quality spots.
