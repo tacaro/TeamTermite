@@ -8,9 +8,9 @@ energy_spent = 3; %fullness lost per turn
 %%%movement angle/dist parameters
 max_turn_angle = pi;
 angle_ratio = 3; %How much less max turn angle is for run than tumble.
-min_tumb = 0.5;
-max_tumb = 2;
-run_tumb_ratio = 4;
+min_tumb = 0.5; %minimum tumble distance
+max_tumb = 2; %max tumble dist
+run_tumb_ratio = 4; %how much longer is run dist than tumble?
 min_run = min_tumb * run_tumb_ratio;
 max_run = max_tumb * run_tumb_ratio;
 boundary = max_run;
@@ -24,13 +24,15 @@ stop_food = 0.8;
 %%%landscape parameters (dimension, # animals, mound placement) 
 xdim = 100;
 ydim = 100;
-n_mounds_side = 7; %if regularly placed.
+
+%N mounds need to be the same in both landscapes! 
+n_mounds_side = 5; %if regularly placed.
 n_mounds = 5; % number of termite mounds if randomly placed
 max_grass = 100; %starting grass/nutrition level for fertilizer patches
 food_ratio = 5; %ratio of initial grass quantity and nutrition on fertilizered patches vs off
 
-steps = 100; %set max time steps
-num_animals = 10;%set number of animals to walk the Earth
+steps = 200; %set max time steps
+num_animals = 100;  %set number of animals to walk the Earth
 fertilizer_pattern = 1;  %can be 0: random or 1: uniform.
 
 
@@ -65,8 +67,10 @@ landscape_time = zeros(xdim, ydim, steps);
 %Record trajectory of all animals. First three columns are first animal,
 %fourth through sixth columns are second animal, etc. x, y coords then
 %food consumed at that step.
+
+%trajectories are saved as xpos, ypos, and fullness for each agent. 
 trajectories = zeros(steps, 3*num_animals);
-time_until_leaving = zeros(num_animals,1); %record time animal leaves
+time_until_leaving = zeros(num_animals,1); %record time animal exits
 dist_to_closest_mound = zeros(steps, num_animals);
 proximity_to_boundary = zeros(steps, num_animals); 
 
@@ -119,33 +123,33 @@ for animal = 1:num_animals
         %line in move_and_feed_1 plz!).
 
 %Decide on movement strategy and calculate next location
-        if  0 % No more stay :(
-            
-            x2 = x1;
-            y2 = y1;
-            
-        else
-            %Choose turn size
+      
+            %Choose turn size & movement distance 
             %Could try making tumble just pi + run angles
-            if food_here < 4 %move farther if nutrition is low
+            %for now, decision to run vs tumble both a fct of food here and
+            %recent memory. 
+            recent_memory = mean(memory);
+            
+            
+            %** this is where the run vs tumble decision is finally made,
+            %and also where it probably makes sense to try to get a sense
+            %for what seems reasonable. 
+            if food_here > 3 || recent_memory > 0.3 %TUMBLE
                 turning_angle = unifrnd(-max_turn_angle/angle_ratio, max_turn_angle/angle_ratio);
-            else 
+                d = unifrnd(min_tumb, max_tumb); 
+            else %RUN 
                 turning_angle = unifrnd(-max_turn_angle, max_turn_angle); 
-            end 
-            direction = rem(direction + turning_angle, (2*pi)); %take remainder so always between [-2*pi, 2*pi] so easier to look at.
-            
-            %Choose movement distant
-            if food_here < 4 %move farther if nutrition is low
-                d = unifrnd(min_run, max_run); %uniform dist of step size
-            else  %stay closer if nutrition is high
-                d = unifrnd(min_tumb, max_tumb);
-                
+                d = unifrnd(min_run, max_run); 
             end 
             
+            direction = rem(direction + turning_angle, (2*pi)); %take remainder so always between [-2*pi, 2*pi] 
+          
+            
+            %agent moves 
             x2 = x1+d*cos(direction);
-            y2 = y1+d*sin(direction); %agent moves 
+            y2 = y1+d*sin(direction);
             
-        end 
+   
 
         %Update landscape and trajectories array
         %returned x2 and y2 will be different from inputs if animal crossed
@@ -155,11 +159,15 @@ for animal = 1:num_animals
         if leave == 1
             for remaining_steps = t+1 : steps+1
                 trajectories(remaining_steps, animal_x : animal_z) = NaN;
+                time_until_leaving(animal) = t;
             end
             break
             %ends "t" loop. returns to "animal" loop.
         end
-        food_consumed = grass_consumed * nutrition;
+        
+        %animals consume more food if quality is higher
+        food_consumed = grass_consumed * nutrition; 
+        
         trajectories(t+1, animal_x : animal_y) = [x2, y2]; %update location
         trajectories(t+1, animal_z) = food_consumed;
         memory(3) = memory(2);, memory(2) = memory(1);, memory(1) = food_consumed;
@@ -178,21 +186,36 @@ for animal = 1:num_animals
         %calculate distance to nearest boundary
         dist_to_boundary = [x2; xdim - x2; y2; ydim - y2] - boundary; 
         proximity_to_boundary(t, animal) = min(dist_to_boundary);
-            
+        time_until_leaving(animal) = steps;
+    
     end
 
 end
 
+%%  visualization
 
-%%% visualization 
 
 %time spent on landscape
-hold on
 hist(time_until_leaving,num_animals/5)
 title('time steps spent in simluation')
-hold off
 
-%distance to nearest boundary
+
+%plot fullness through time for each animal 
+hold on
+for animal = 1:num_animals
+    fullness_level = trajectories(:,3*animal);
+    t_spent = time_until_leaving(animal);
+    plot(1:t_spent, fullness_level(1:t_spent));
+end 
+
+xlim([1 steps])
+ylim([1 max_feed+2])
+
+title('fullness through time ');
+hold off 
+
+
+%distance to nearest boundary.
 figure
 hold on 
 for animal = 1:num_animals
@@ -212,8 +235,7 @@ end
 title('distance to closest mound thru time')
 hold off 
 
-%quantity. this plot is hard to look at at first, need to ajust it w your
-%mouse
+%quantity.
 figure, surf(landscape(:,:,1));
 hold on 
 zz =transpose(linspace(100,100,length(trajectories(:,2))));
@@ -225,8 +247,7 @@ end
 title('ending landscape grass quantity values');
 hold off
 
-%nutrition this plot is hard to look at at first, need to ajust it w your
-%mouse 
+%nutrition 
 figure, surf(landscape(:,:,2));
 hold on
 zz =transpose(linspace(100,100,length(trajectories(:,2))));
@@ -239,8 +260,7 @@ title('ending landscape nutrition values');
 hold off
 
 
-%dung  this plot is hard to look at at first, need to ajust it w your
-%mouse
+%dung 
 surf(landscape(:, :, 3));zz =transpose(linspace(100,100,length(trajectories(:,2))));
 hold on
 for animal = 1:num_animals
@@ -251,7 +271,6 @@ end
 title('dung location pileups');
 hold off 
 
-%% Additional Plotting
 % dung vs. nutrition scatterplot
  % turning the landscape vals of quantity and dung into column vectors
  % using the first frame of landscape
@@ -269,4 +288,5 @@ title('Total dung counts vs. initial nutrient quantity')
 xlabel('Grass count')
 ylabel('Dung Count')
 hold off
+
 
