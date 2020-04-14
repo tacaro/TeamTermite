@@ -27,7 +27,7 @@ ydim = 100;
 
 %N mounds need to be the same in both landscapes! 
 n_mounds_side = 5; %if regularly placed.
-n_mounds = 5; % number of termite mounds if randomly placed
+n_mounds = n_mounds_side^2; % number of termite mounds if randomly placed
 max_grass = 100; %starting grass/nutrition level for fertilizer patches
 food_ratio = 5; %ratio of initial grass quantity and nutrition on fertilizered patches vs off
 
@@ -44,7 +44,6 @@ if fertilizer_pattern == 1
     %fert_y(1) = [];, fert_y(end) = []; %Remove fertilizer right on edge
     [X,Y] = meshgrid(fert_x, fert_y);
     fertilizer_xy = round([X(:), Y(:)]);
-    n_mounds = size(fertilizer_xy, 1);
 elseif fertilizer_pattern == 0
     %random_fert = [randi([1 xdim],1,n_mounds) ; randi([1 ydim],1,n_mounds)];
     %fertilizer_xy = transpose(random_fert);
@@ -118,9 +117,6 @@ for animal = 1:num_animals
         y1 = curr_location(2);
         [grass_quantity, nutrition] = current_location(landscape,x1, y1);
         food_here = round(grass_quantity * nutrition * max_feed / max_grass, 1);
-        %Ellen: ^^this is how I did how much they eat when they stop to
-        %eat. Feel free to change it (and then change the "grass_consumed"
-        %line in move_and_feed_1 plz!).
 
 %Decide on movement strategy and calculate next location
       
@@ -135,10 +131,10 @@ for animal = 1:num_animals
             %and also where it probably makes sense to try to get a sense
             %for what seems reasonable. 
             if food_here > 3 || recent_memory > 0.3 %TUMBLE
-                turning_angle = unifrnd(-max_turn_angle/angle_ratio, max_turn_angle/angle_ratio);
+                turning_angle = unifrnd(-max_turn_angle, max_turn_angle); 
                 d = unifrnd(min_tumb, max_tumb); 
             else %RUN 
-                turning_angle = unifrnd(-max_turn_angle, max_turn_angle); 
+                turning_angle = unifrnd(-max_turn_angle/angle_ratio, max_turn_angle/angle_ratio);
                 d = unifrnd(min_run, max_run); 
             end 
             

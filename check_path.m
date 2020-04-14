@@ -29,7 +29,7 @@ for square = 2:num_squares
     %Leave?
     if (xx + boundary) > size(landscape, 2) || ...
         (xx - boundary) < 1 || (yy + boundary) > size(landscape, 1) || ...
-        (yy - boundary) < 1 ;
+        (yy - boundary) < 1 
         path_array( (square : num_squares), : ) = [];
         x_stop = crossing_array(square, 1);
         y_stop = crossing_array(square, 2);
