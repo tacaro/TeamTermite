@@ -72,7 +72,7 @@ if leave == 0
     %exactly on a grid line (so it does not round nonsensically).
     grass = landscape(y_f, x_f, 1);
     nutrition = landscape(y_f, x_f, 2);
-    grass_consumed = round(grass * nutrition * max_feed / max_grass, 1);
+    grass_consumed = round(grass * max_feed / max_grass, 1);
     landscape(y_f, x_f, 1) = grass - grass_consumed;
     landscape(y_f, x_f, 3) = landscape(y_f, x_f, 3) + feed_time + (1 - move_time);
     

@@ -71,6 +71,7 @@ dist_to_closest_mound = zeros(steps, num_animals);
 proximity_to_boundary = zeros(steps, num_animals); 
 
 curr_location = zeros(1,2);
+memory = zeros(1,3);
 
 for animal = 1:num_animals
     %%movement loop
@@ -103,6 +104,7 @@ for animal = 1:num_animals
     trajectories(1, animal_x : animal_y) = [start_pos]; 
     %initialize. Goes to 1 when animal leaves boundary on landscape.
     leave = 0;
+    memory(:) = 0;
     
     for t=1:steps
         
@@ -156,8 +158,11 @@ for animal = 1:num_animals
             break
             %ends "t" loop. returns to "animal" loop.
         end
+        food_consumed = grass_consumed * nutrition;
         trajectories(t+1, animal_x : animal_y) = [x2, y2]; %update location
-        trajectories(t+1, animal_z) = grass_consumed * nutrition;
+        trajectories(t+1, animal_z) = food_consumed;
+        memory(3) = memory(2);, memory(2) = memory(1);, memory(1) = food_consumed;
+        
        
         %calculate distance to nearest mound        
         mound_dists = zeros(n_mounds,1);
