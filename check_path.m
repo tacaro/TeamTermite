@@ -10,7 +10,7 @@ path_array ends halfway through path through stopping grid square.
 
 %}
 
-function [path_array, leave, x_stop, y_stop] = check_path(grass_scape, path_array, crossing_array, fullness, stop_grass, boundary)
+function [path_array, leave, x_stop, y_stop] = check_path(grass_scape, path_array, crossing_array, stop_grass, boundary)
 
 num_squares = size(path_array, 1);
 x_stop = crossing_array(end, 1);

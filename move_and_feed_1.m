@@ -27,7 +27,7 @@ grid spaces of the edge of the landscape array.
 
 
 function [landscape, grass_consumed, nutrition, x_stop, y_stop, leave] = move_and_feed_1(landscape, x1, y1,...
-    x2, y2, boundary, feed_amount, feed_time, stop_grass, fullness)
+    x2, y2, boundary, max_feed, init_food_fert, feed_time, stop_grass)
 
 
 
@@ -50,7 +50,7 @@ end
 %MOVE
 
 [path_array, crossing_array] = move_1(x1, y1, x2, y2);
-[path_array, leave, x_stop, y_stop] = check_path(landscape(:,:,1), path_array, crossing_array, fullness, stop_grass, boundary);
+[path_array, leave, x_stop, y_stop] = check_path(landscape(:,:,1), path_array, crossing_array, stop_grass, boundary);
 num_squares = size(path_array, 1);
 for square = 1:num_squares
     xx = path_array(square, 1);
@@ -71,7 +71,7 @@ if leave == 0
     %exactly on a grid line (so it does not round nonsensically).
     grass = landscape(y_f, x_f, 1);
     nutrition = landscape(y_f, x_f, 2);
-    grass_consumed = min(grass, feed_amount);
+    grass_consumed = round(grass * nutrition * max_feed / init_food_fert, 1);
     landscape(y_f, x_f, 1) = grass - grass_consumed;
     landscape(y_f, x_f, 3) = landscape(y_f, x_f, 3) + feed_time + (1 - move_time);
     

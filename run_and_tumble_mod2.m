@@ -2,8 +2,7 @@
 %Set variable model parameters
 %%%%grazing parameters
 feed_time = 1; %relative to total movement time (of 1)
-feed_amount = 5; %max amount can feed per turn
-init_fullness = 50;
+max_feed = 5; %max amount can feed per turn
 energy_spent = 3; %fullness lost per turn
 
 %%%movement angle/dist parameters
@@ -63,9 +62,10 @@ landscape_time = zeros(xdim, ydim, steps);
 
 %STEP2: agents move through landscape.
 
-%Record trajectory of all animals. First two columns are first animal,
-%third and fourth columns are second animal, etc.
-trajectories = zeros(steps, 2*num_animals);
+%Record trajectory of all animals. First three columns are first animal,
+%fourth through sixth columns are second animal, etc. x, y coords then
+%food consumed at that step.
+trajectories = zeros(steps, 3*num_animals);
 time_until_leaving = zeros(num_animals,1); %record time animal leaves
 dist_to_closest_mound = zeros(steps, num_animals);
 proximity_to_boundary = zeros(steps, num_animals); 
@@ -74,8 +74,9 @@ curr_location = zeros(1,2);
 
 for animal = 1:num_animals
     %%movement loop
-    animal_x = 2*animal - 1;%These are for indexing trajectories array
+    animal_x = 3*animal - 2;%These are for indexing trajectories array
     animal_y = animal_x + 1;
+    animal_z = animal_x + 2;
     
     %random starting position on perimeter of landscape: 
     %pick x or y to start on, other var is 1 or max. 
@@ -102,7 +103,6 @@ for animal = 1:num_animals
     trajectories(1, animal_x : animal_y) = [start_pos]; 
     %initialize. Goes to 1 when animal leaves boundary on landscape.
     leave = 0;
-    fullness = init_fullness;
     
     for t=1:steps
         
@@ -110,9 +110,13 @@ for animal = 1:num_animals
         x1 = curr_location(1);
         y1 = curr_location(2);
         [grass_quantity, nutrition] = current_location(landscape,x1, y1);
+        food_here = round(grass_quantity * nutrition * max_feed / init_food_fert, 1);
+        %Ellen: ^^this is how I did how much they eat when they stop to
+        %eat. Feel free to change it (and then change the "grass_consumed"
+        %line in move_and_feed_1 plz!).
 
 %Decide on movement strategy and calculate next location
-        if  grass_quantity >= stay_grass || fullness < 2 %&& nutrition >= stay_nutrition
+        if  0 % No more stay :(
             
             x2 = x1;
             y2 = y1;
@@ -120,7 +124,7 @@ for animal = 1:num_animals
         else
             %Choose turn size
             %Could try making tumble just pi + run angles
-            if fullness < 5 %if hungry, turns are narrower. 
+            if food_here < 4 %move farther if nutrition is low
                 turning_angle = unifrnd(-max_turn_angle/angle_ratio, max_turn_angle/angle_ratio);
             else 
                 turning_angle = unifrnd(-max_turn_angle, max_turn_angle); 
@@ -128,7 +132,7 @@ for animal = 1:num_animals
             direction = rem(direction + turning_angle, (2*pi)); %take remainder so always between [-2*pi, 2*pi] so easier to look at.
             
             %Choose movement distant
-            if nutrition < run_nutrition %move farther if nutrition is low
+            if food_here < 4 %move farther if nutrition is low
                 d = unifrnd(min_run, max_run); %uniform dist of step size
             else  %stay closer if nutrition is high
                 d = unifrnd(min_tumb, max_tumb);
@@ -143,18 +147,17 @@ for animal = 1:num_animals
         %Update landscape and trajectories array
         %returned x2 and y2 will be different from inputs if animal crossed
         %boundary or crossed a good patch and stopped.
-        [landscape, grass_consumed, nutrition, x2, y2, leave] = ... 
-            move_and_feed_1(landscape, x1, y1, x2, y2, boundary, feed_amount, feed_time, stop_grass, fullness);
-
+        [landscape, grass_consumed, nutrition, x_stop, y_stop, leave] = ...
+            move_and_feed_1(landscape, x1, y1, x2, y2, boundary, max_feed, init_food_fert, feed_time, stop_grass);
         if leave == 1
             for remaining_steps = t+1 : steps+1
-                trajectories(remaining_steps, animal_x : animal_y) = NaN;
+                trajectories(remaining_steps, animal_x : animal_z) = NaN;
             end
             break
             %ends "t" loop. returns to "animal" loop.
         end
         trajectories(t+1, animal_x : animal_y) = [x2, y2]; %update location
-        fullness = fullness + grass_consumed - energy_spent;
+        trajectories(t+1, animal_z) = grass_consumed * nutrition;
        
         %calculate distance to nearest mound        
         mound_dists = zeros(n_mounds,1);
@@ -209,7 +212,7 @@ figure, surf(landscape(:,:,1));
 hold on 
 zz =transpose(linspace(100,100,length(trajectories(:,2))));
 for animal = 1:num_animals
-    xx = 2*animal - 1;
+    xx = 3*animal - 2;
     yy = xx + 1;
     plot3(trajectories(:,xx,1), trajectories(:,yy,1),zz)
 end 
@@ -222,7 +225,7 @@ figure, surf(landscape(:,:,2));
 hold on
 zz =transpose(linspace(100,100,length(trajectories(:,2))));
 for animal = 1:num_animals
-    xx = 2*animal - 1;
+    xx = 3*animal - 2;
     yy = xx + 1;
     plot3(trajectories(:,xx,1), trajectories(:,yy,1),zz)
 end 
@@ -235,7 +238,7 @@ hold off
 surf(landscape(:, :, 3));zz =transpose(linspace(100,100,length(trajectories(:,2))));
 hold on
 for animal = 1:num_animals
-    xx = 2*animal - 1;
+    xx = 3*animal - 2;
     yy = xx + 1;
     plot3(trajectories(:,xx,1), trajectories(:,yy,1),zz)
 end 
