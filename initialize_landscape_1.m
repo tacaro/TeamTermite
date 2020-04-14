@@ -13,7 +13,7 @@ Note: x dimension refers to column, and y dimension to row. X dimension
 increases left to right, Y dimension top to bottom.
 %}
 
-function landscape = initialize_landscape_1(xdim, ydim, fertilizer_xy, init_food_fert, food_ratio)
+function landscape = initialize_landscape_1(xdim, ydim, fertilizer_xy, max_grass, food_ratio)
 %fertilizer_xy is a nx2 array of x-y points
 
 validateattributes(xdim,{'numeric'},{'integer', 'positive'});
@@ -31,7 +31,7 @@ end
 
 %day = 0;
 %initialize date!
-init_food_off = init_food_fert / food_ratio;
+init_food_off = max_grass / food_ratio;
 init_nutrition_off = round(1 / food_ratio, 2);
 landscape = zeros(ydim, xdim, 3);
 %Z dimension will be 1-grass count 2-nutritional quality 3-poop count
@@ -53,7 +53,7 @@ for xx = 1:xdim
         end
         if landscape(yy, xx, 1) < 3.5
             %On mound
-           landscape(yy, xx, 1) = init_food_fert;
+           landscape(yy, xx, 1) = max_grass;
            landscape(yy, xx, 2) = 1;
         else
             landscape(yy, xx, 1) = init_food_off;

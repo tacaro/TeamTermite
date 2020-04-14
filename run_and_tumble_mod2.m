@@ -19,14 +19,14 @@ boundary = max_run;
 stay_grass = 30;
 stay_nutrition = 5;
 run_nutrition = 3; 
-stop_grass = 30;
+stop_food = 0.8;
 
 %%%landscape parameters (dimension, # animals, mound placement) 
-xdim = 50;
-ydim = 50;
-n_mounds_side = 3; %if regularly placed.
+xdim = 100;
+ydim = 100;
+n_mounds_side = 7; %if regularly placed.
 n_mounds = 5; % number of termite mounds if randomly placed
-init_food_fert = 100; %starting grass/nutrition level for fertilizer patches
+max_grass = 100; %starting grass/nutrition level for fertilizer patches
 food_ratio = 5; %ratio of initial grass quantity and nutrition on fertilizered patches vs off
 
 steps = 100; %set max time steps
@@ -54,7 +54,7 @@ end
 
 
 %ready to initialize landscape
-landscape = initialize_landscape_1(xdim, ydim, fertilizer_xy, init_food_fert, food_ratio);
+landscape = initialize_landscape_1(xdim, ydim, fertilizer_xy, max_grass, food_ratio);
 landscape_before_run = landscape; % take snapshot of first frame for later reference
 % Preallocate dataframe to track food concentration over time
 landscape_time = zeros(xdim, ydim, steps);
@@ -110,7 +110,7 @@ for animal = 1:num_animals
         x1 = curr_location(1);
         y1 = curr_location(2);
         [grass_quantity, nutrition] = current_location(landscape,x1, y1);
-        food_here = round(grass_quantity * nutrition * max_feed / init_food_fert, 1);
+        food_here = round(grass_quantity * nutrition * max_feed / max_grass, 1);
         %Ellen: ^^this is how I did how much they eat when they stop to
         %eat. Feel free to change it (and then change the "grass_consumed"
         %line in move_and_feed_1 plz!).
@@ -148,7 +148,7 @@ for animal = 1:num_animals
         %returned x2 and y2 will be different from inputs if animal crossed
         %boundary or crossed a good patch and stopped.
         [landscape, grass_consumed, nutrition, x_stop, y_stop, leave] = ...
-            move_and_feed_1(landscape, x1, y1, x2, y2, boundary, max_feed, init_food_fert, feed_time, stop_grass);
+            move_and_feed_1(landscape, x1, y1, x2, y2, boundary, max_feed, max_grass, feed_time, stop_food);
         if leave == 1
             for remaining_steps = t+1 : steps+1
                 trajectories(remaining_steps, animal_x : animal_z) = NaN;

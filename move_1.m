@@ -1,10 +1,14 @@
 %{
 Called by the function move_and_feed_1.
 Input: starting and ending coordinates
-Output: a 3-column array with rows in order as path traveled. Columns:
+Output:
+path-array:
+a 3-column array with rows in order as path traveled. Columns:
 1: x-coordinate of grid space traveled through.
 2: y-coordinate of grid space traveled through.
 3: Portion of path spent in that grid space.
+crossing_array:
+x-y coordinates of grid lines crossed (in order of travel)
 
 %}
 
