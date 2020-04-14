@@ -27,7 +27,8 @@ xdim = 50;
 ydim = 50;
 n_mounds_side = 3; %if regularly placed.
 n_mounds = 5; % number of termite mounds if randomly placed
-max_food = 100; %starting grass/nutrition level for fertilizer patches
+init_food_fert = 100; %starting grass/nutrition level for fertilizer patches
+food_ratio = 5; %ratio of initial grass quantity and nutrition on fertilizered patches vs off
 
 steps = 100; %set max time steps
 num_animals = 10;%set number of animals to walk the Earth
@@ -54,7 +55,7 @@ end
 
 
 %ready to initialize landscape
-landscape = initialize_landscape_1(xdim, ydim, fertilizer_xy, max_food);
+landscape = initialize_landscape_1(xdim, ydim, fertilizer_xy, init_food_fert, food_ratio);
 landscape_before_run = landscape; % take snapshot of first frame for later reference
 % Preallocate dataframe to track food concentration over time
 landscape_time = zeros(xdim, ydim, steps);

@@ -13,32 +13,33 @@ Note: x dimension refers to column, and y dimension to row. X dimension
 increases left to right, Y dimension top to bottom.
 %}
 
-function landscape = initialize_landscape_1(x_dim, y_dim, fertilizer_xy, max_food)
+function landscape = initialize_landscape_1(xdim, ydim, fertilizer_xy, init_food_fert, food_ratio)
 %fertilizer_xy is a nx2 array of x-y points
 
-validateattributes(x_dim,{'numeric'},{'integer', 'positive'});
-validateattributes(y_dim,{'numeric'},{'integer', 'positive'});
+validateattributes(xdim,{'numeric'},{'integer', 'positive'});
+validateattributes(ydim,{'numeric'},{'integer', 'positive'});
 validateattributes(fertilizer_xy, {'numeric'}, {'integer', 'positive',...
     'ncols', 2});
 disp('All inputs to initialize_landscape_1 are ok.');
 
 num_mounds = size(fertilizer_xy,1);
 for xy = 1:num_mounds
-    if fertilizer_xy(xy, 1) > x_dim | fertilizer_xy(xy, 2) > y_dim
+    if fertilizer_xy(xy, 1) > xdim || fertilizer_xy(xy, 2) > ydim
         error('fertilizer coordinates exceed landscape bounds');
     end
 end
 
 %day = 0;
 %initialize date!
-
-landscape = zeros(y_dim, x_dim, 3);
+init_food_off = init_food_fert / food_ratio;
+init_nutrition_off = round(1 / food_ratio, 2);
+landscape = zeros(ydim, xdim, 3);
 %Z dimension will be 1-grass count 2-nutritional quality 3-poop count
 
 %Calculate distances from closest mound
-max_dist = round(sqrt(x_dim^2 + y_dim^2));
-for xx = 1:x_dim
-    for yy = 1:y_dim
+max_dist = round(sqrt(xdim^2 + ydim^2));
+for xx = 1:xdim
+    for yy = 1:ydim
         landscape(yy, xx, 1) = max_dist;
         landscape(yy, xx, 2) = max_dist;
         for mound = 1:num_mounds
@@ -49,19 +50,17 @@ for xx = 1:x_dim
                 landscape(yy, xx, 1) = dist_to_mound;
                 landscape(yy, xx, 2) = dist_to_mound; 
             end
-        end      
+        end
+        if landscape(yy, xx, 1) < 3.5
+            %On mound
+           landscape(yy, xx, 1) = init_food_fert;
+           landscape(yy, xx, 2) = 1;
+        else
+            landscape(yy, xx, 1) = init_food_off;
+            landscape(yy, xx, 2) = init_nutrition_off; 
+        end
     end
 end
-
-
-%Assign starting grass quantities and nutritional values based on distances
-%to closest mound.
-
-%grasscount
-landscape(:,:,1) = round(max_food./(landscape(:,:,1)+1));
-
-%Nutritional value
-landscape(:,:,2) = round(max_food./(landscape(:,:,2)+1));
 
 
 end
