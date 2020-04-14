@@ -1,3 +1,11 @@
+% Contents:
+%     - Model Script
+%     - Export metadata
+%     - Model Vizualization
+%     - Data visualization
+
+
+
 %% Model Script
 %Set variable model parameters
 %%%%grazing parameters
@@ -25,7 +33,7 @@ stop_food = 0.8;
 xdim = 100;
 ydim = 100;
 
-%N mounds need to be the same in both landscapes! 
+% N mounds need to be the same in both landscapes! 
 n_mounds_side = 5; %if regularly placed.
 n_mounds = n_mounds_side^2; % number of termite mounds if randomly placed
 max_grass = 100; %starting grass/nutrition level for fertilizer patches
@@ -188,15 +196,15 @@ for animal = 1:num_animals
 
 end
 
-%%  visualization
+%% Visualization
 
 
-%time spent on landscape
+% Time spent on landscape
 hist(time_until_leaving,num_animals/5)
 title('time steps spent in simluation')
 
 
-%plot fullness through time for each animal 
+% Plot fullness through time for each animal 
 hold on
 for animal = 1:num_animals
     fullness_level = trajectories(:,3*animal);
@@ -211,7 +219,7 @@ title('fullness through time ');
 hold off 
 
 
-%distance to nearest boundary.
+% Distance to nearest boundary.
 figure
 hold on 
 for animal = 1:num_animals
@@ -221,7 +229,7 @@ end
 title('distance to boundary thru time')
 hold off 
 
-%plot distance to mound center through time for each animal
+% Plot distance to mound center through time for each animal
 figure
 hold on 
 for animal = 1:num_animals
@@ -231,7 +239,7 @@ end
 title('distance to closest mound thru time')
 hold off 
 
-%quantity.
+% Quantity Plot
 figure, surf(landscape(:,:,1));
 hold on 
 zz =transpose(linspace(100,100,length(trajectories(:,2))));
@@ -243,7 +251,7 @@ end
 title('ending landscape grass quantity values');
 hold off
 
-%nutrition 
+% Nutrition Plot 
 figure, surf(landscape(:,:,2));
 hold on
 zz =transpose(linspace(100,100,length(trajectories(:,2))));
@@ -256,7 +264,7 @@ title('ending landscape nutrition values');
 hold off
 
 
-%dung 
+% Dung Plot 
 surf(landscape(:, :, 3));zz =transpose(linspace(100,100,length(trajectories(:,2))));
 hold on
 for animal = 1:num_animals
@@ -267,22 +275,11 @@ end
 title('dung location pileups');
 hold off 
 
-% dung vs. nutrition scatterplot
- % turning the landscape vals of quantity and dung into column vectors
- % using the first frame of landscape
-quant = reshape(landscape_before_run(:,:,1), 1, []);
-dng = reshape(landscape(:,:,3), 1, []);
-
-coefficients = polyfit(quant, dng, 1);
-xFit = linspace(min(quant), max(quant), 1000);
-yFit = polyval(coefficients , xFit);
-hold on;
-plot(xFit, yFit, 'r-', 'LineWidth', 2);
-grid on;
-scatter(quant, dng) % plot nutrient on x, dng on y
-title('Total dung counts vs. initial nutrient quantity')
-xlabel('Grass count')
-ylabel('Dung Count')
-hold off
-
-
+%% Data Export
+writematrix(trajectories, 'dfs/trajectories.csv'); % trajectories
+writematrix(landscape(:,:,1), 'dfs/quantity_end.csv'); % quantity
+writematrix(landscape(:,:,2), 'dfs/nutrition_end.csv'); % nutrition
+writematrix(landscape(:,:,3), 'dfs/dung_end.csv'); % dung
+writematrix(landscape_before_run(:,:,1), 'dfs/quantity_start.csv'); % quantity at start
+writematrix(landscape_before_run(:,:,2), 'dfs/nutrition_start.csv'); % nutrition at start
+writematrix(landscape_before_run(:,:,3), 'dfs/dung_start.csv'); % dung at start
