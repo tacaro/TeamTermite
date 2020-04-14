@@ -105,6 +105,7 @@ for animal = 1:num_animals
     %initialize. Goes to 1 when animal leaves boundary on landscape.
     leave = 0;
     memory(:) = 0;
+    %memory(1) is most recent, (3) least recent.
     
     for t=1:steps
         
