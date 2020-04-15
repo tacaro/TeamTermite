@@ -1,26 +1,30 @@
 % Contents:
-%     - Set user-defined parameters (required)
+%     - Set User-Defined Parameters
 %     - Model Script
-%     - Export metadata
 %     - Model Vizualization
-%     - Data visualization
+%     - Export Metadata
+
 
 
 %% SET USER-DEFINED PARAMETERS:
     % Random, uniform, or neutral (no patches)? (string)
-    fertilizer_pattern = "uniform";
+    fertilizer_pattern = "random";
     % Number of animals to run? (integer)
     num_animals = 100;  %set number of animals to walk the Earth
     STRnum_animals = num2str(num_animals); % add a string version for data export
     % Max steps that each animal is allotted? (integer)
     steps = 200;
     STRsteps = num2str(steps); % add a string version for data export
-    
-    
-    
-    
 
-
+    
+    
+    
+    
+    
+    
+    
+    
+    
     
     
 
@@ -108,13 +112,16 @@ curr_location = zeros(1,2);
 memory = zeros(1,3);
 
 for animal = 1:num_animals
-    %%movement loop
+    % Take snapshot of landscape, append to landscape_over_time
+    landscape_over_time(:, :, animal) = landscape(:,:,1);
+    
+    % Movement loop
     animal_x = 3*animal - 2;%These are for indexing trajectories array
     animal_y = animal_x + 1;
     animal_z = animal_x + 2;
     
-    %random starting position on perimeter of landscape: 
-    %pick x or y to start on, other var is 1 or max. 
+    % Random starting position on perimeter of landscape: 
+    % Pick x or y to start on, other var is 1 or max. 
     A = [1+boundary, xdim-boundary];
     astart = A(randi(length(A), 1));
     %bstart = (randi(xdim, 1)); %%%I think this allows a coordinate outside the boundary?
@@ -122,7 +129,7 @@ for animal = 1:num_animals
     starting_pos = [astart,bstart ; bstart,astart ]; 
     start_pos = starting_pos(:,randi(2,1));
    
-    %Set starting directions.
+    % Set starting directions.
     if start_pos(1) == 1+boundary
         direction = (-pi/2) + (pi*rand);
     elseif start_pos(1) == xdim-boundary
@@ -224,92 +231,98 @@ end
 
 %% Visualization
 
-
 % Time spent on landscape
-hist(time_until_leaving,num_animals/5)
-title('time steps spent in simluation')
+    hist(time_until_leaving,num_animals/5)
+    title('time steps spent in simluation')
 
 
 % Plot fullness through time for each animal 
-hold on
-for animal = 1:num_animals
-    fullness_level = trajectories(:,3*animal);
-    t_spent = time_until_leaving(animal);
-    plot(1:t_spent, fullness_level(1:t_spent));
-end 
-
-xlim([1 steps])
-ylim([1 max_feed+2])
-
-title('fullness through time ');
-hold off 
-
+    hold on
+    for animal = 1:num_animals
+        fullness_level = trajectories(:,3*animal);
+        t_spent = time_until_leaving(animal);
+        plot(1:t_spent, fullness_level(1:t_spent));
+    end 
+    xlim([1 steps])
+    ylim([1 max_feed+2])
+    title('fullness through time ');
+    hold off 
 
 % Distance to nearest boundary.
-figure
-hold on 
-for animal = 1:num_animals
-    plot(1:steps, proximity_to_boundary(:, animal))
-    
-end 
-title('distance to boundary thru time')
-hold off 
+    figure
+    hold on 
+    for animal = 1:num_animals
+        plot(1:steps, proximity_to_boundary(:, animal))
+
+    end 
+    title('distance to boundary thru time')
+    hold off 
 
 % Plot distance to mound center through time for each animal
-figure
-hold on 
-for animal = 1:num_animals
-    plot(1:steps, dist_to_closest_mound(:, animal))
-    
-end 
-title('distance to closest mound thru time')
-hold off 
+    figure
+    hold on 
+    for animal = 1:num_animals
+        plot(1:steps, dist_to_closest_mound(:, animal))
+
+    end 
+    title('distance to closest mound thru time')
+    hold off 
 
 % Quantity Plot
-figure, surf(landscape(:,:,1));
-hold on 
-zz =transpose(linspace(100,100,length(trajectories(:,2))));
-for animal = 1:num_animals
-    xx = 3*animal - 2;
-    yy = xx + 1;
-    plot3(trajectories(:,xx,1), trajectories(:,yy,1),zz)
-end 
-title('ending landscape grass quantity values');
-hold off
+    figure, surf(landscape(:,:,1));
+    hold on 
+    zz =transpose(linspace(100,100,length(trajectories(:,2))));
+    for animal = 1:num_animals
+        xx = 3*animal - 2;
+        yy = xx + 1;
+        plot3(trajectories(:,xx,1), trajectories(:,yy,1),zz)
+    end 
+    title('ending landscape grass quantity values');
+    hold off
 
 % Nutrition Plot 
-figure, surf(landscape(:,:,2));
-hold on
-zz =transpose(linspace(100,100,length(trajectories(:,2))));
-for animal = 1:num_animals
-    xx = 3*animal - 2;
-    yy = xx + 1;
-    plot3(trajectories(:,xx,1), trajectories(:,yy,1),zz)
-end 
-title('ending landscape nutrition values');
-hold off
+    figure, surf(landscape(:,:,2));
+    hold on
+    zz =transpose(linspace(100,100,length(trajectories(:,2))));
+    for animal = 1:num_animals
+        xx = 3*animal - 2;
+        yy = xx + 1;
+        plot3(trajectories(:,xx,1), trajectories(:,yy,1),zz)
+    end 
+    title('ending landscape nutrition values');
+    hold off
 
 
 % Dung Plot 
-surf(landscape(:, :, 3));zz =transpose(linspace(100,100,length(trajectories(:,2))));
-hold on
-for animal = 1:num_animals
-    xx = 3*animal - 2;
-    yy = xx + 1;
-    plot3(trajectories(:,xx,1), trajectories(:,yy,1),zz)
-end 
-title('dung location pileups');
-hold off 
+    surf(landscape(:, :, 3));zz =transpose(linspace(100,100,length(trajectories(:,2))));
+    hold on
+    for animal = 1:num_animals
+        xx = 3*animal - 2;
+        yy = xx + 1;
+        plot3(trajectories(:,xx,1), trajectories(:,yy,1),zz)
+    end 
+    title('dung location pileups');
+    hold off 
 
 %% Data Export
 % Create a "basename" so that all exported csvs share a common format, in
 % the same folder. 'dfs/' folder is required to exist.
 basename = strcat('dfs/', fertilizer_pattern, "_", STRsteps, "_", STRnum_animals, "_");
 % Output .csv files
+disp("Saving files . . .")
 writematrix(trajectories, strcat(basename, 'trajectories.csv')); % trajectories
-writematrix(landscape(:,:,1), strcat(basename, 'quantity.csv')); % quantity
+writematrix(landscape(:,:,1), strcat(basename, 'quantity_end.csv')); % quantity
 writematrix(landscape(:,:,2), strcat(basename, 'nutrition_end.csv')); % nutrition
 writematrix(landscape(:,:,3), strcat(basename, 'dung_end.csv')); % dung
 writematrix(landscape_before_run(:,:,1), strcat(basename, 'quantity_start.csv')); % quantity at start
 writematrix(landscape_before_run(:,:,2), strcat(basename, 'nutrition_start.csv')); % nutrition at start
 writematrix(landscape_before_run(:,:,3), strcat(basename, 'dung_start.csv')); % dung at start
+
+% In order to export the three dimensional landscape_over_time matrix in a way that makes sense
+% I'm going to export it as a two dimensional matrix with each slice pasted
+% below the proceeding one.
+dynamic_landscape = permute(landscape_over_time, [1 3 2]);
+dynamic_landscape = reshape(dynamic_landscape, [], size(landscape_over_time, 2), 1);
+writematrix(dynamic_landscape, strcat(basename, 'dynamic_landscape.csv'));
+
+disp("All files saved successfully")
