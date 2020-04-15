@@ -11,8 +11,10 @@
     fertilizer_pattern = "uniform";
     % Number of animals to run? (integer)
     num_animals = 100;  %set number of animals to walk the Earth
+    STRnum_animals = num2str(num_animals); % add a string version for data export
     % Max steps that each animal is allotted? (integer)
     steps = 200;
+    STRsteps = num2str(steps); % add a string version for data export
     
     
     
@@ -81,7 +83,7 @@ elseif fertilizer_pattern == "neutral"
     [X,Y] = meshgrid(fert_x, fert_y);
     fertilizer_xy = randi([0, 100], 25, 2); % creeates a random distribution of nutrient
 else
-    disp("Fertilizer pattern not recognized: exiting script")
+    disp("Exception: Fertilizer pattern not recognized. The options are 'random', 'uniform', and 'neutral'.")
     clearvars
     return
 end     
@@ -130,7 +132,8 @@ for animal = 1:num_animals
     elseif start_pos(2) == xdim-boundary
         direction = (pi*rand);
     else
-        disp("something wrong with starting direction");
+        disp("Something is wrong with starting direction, exiting script!");
+        return
     end
     
     trajectories(1, animal_x : animal_y) = [start_pos]; 
@@ -149,38 +152,38 @@ for animal = 1:num_animals
         [grass_quantity, nutrition] = current_location(landscape,x1, y1);
         food_here = round(grass_quantity * nutrition * max_feed / max_grass, 1);
 
-%Decide on movement strategy and calculate next location
+% Decide on movement strategy and calculate next location
       
-            %Choose turn size & movement distance 
-            %Could try making tumble just pi + run angles
-            %for now, decision to run vs tumble both a fct of food here and
-            %recent memory. 
+            % Choose turn size & movement distance 
+            % Could try making tumble just pi + run angles
+            % for now, decision to run vs tumble both a fct of food here and
+            % recent memory. 
             recent_memory = mean(memory);
             
             
-            %** this is where the run vs tumble decision is finally made,
-            %and also where it probably makes sense to try to get a sense
-            %for what seems reasonable. 
-            if food_here > 3 || recent_memory > 0.3 %TUMBLE
+            % ** this is where the run vs tumble decision is finally made,
+            % and also where it probably makes sense to try to get a sense
+            % for what seems reasonable. 
+            if food_here > 3 || recent_memory > 0.3 % TUMBLE
                 turning_angle = unifrnd(-max_turn_angle, max_turn_angle); 
                 d = unifrnd(min_tumb, max_tumb); 
-            else %RUN 
+            else % RUN 
                 turning_angle = unifrnd(-max_turn_angle/angle_ratio, max_turn_angle/angle_ratio);
                 d = unifrnd(min_run, max_run); 
             end 
             
-            direction = rem(direction + turning_angle, (2*pi)); %take remainder so always between [-2*pi, 2*pi] 
+            direction = rem(direction + turning_angle, (2*pi)); % Take remainder so always between [-2*pi, 2*pi] 
           
             
-            %agent moves 
+            % Agent moves 
             x2 = x1+d*cos(direction);
             y2 = y1+d*sin(direction);
             
    
 
-        %Update landscape and trajectories array
-        %returned x2 and y2 will be different from inputs if animal crossed
-        %boundary or crossed a good patch and stopped.
+        % Update landscape and trajectories array
+        % returned x2 and y2 will be different from inputs if animal crossed
+        % boundary or crossed a good patch and stopped.
         [landscape, grass_consumed, nutrition, x_stop, y_stop, leave] = ...
             move_and_feed_1(landscape, x1, y1, x2, y2, boundary, max_feed, max_grass, feed_time, stop_food);
         if leave == 1
@@ -189,10 +192,10 @@ for animal = 1:num_animals
                 time_until_leaving(animal) = t;
             end
             break
-            %ends "t" loop. returns to "animal" loop.
+            % Ends "t" loop. returns to "animal" loop.
         end
         
-        %animals consume more food if quality is higher
+        % Animals consume more food if quality is higher
         food_consumed = grass_consumed * nutrition; 
         
         trajectories(t+1, animal_x : animal_y) = [x2, y2]; %update location
@@ -200,7 +203,7 @@ for animal = 1:num_animals
         memory(3) = memory(2);, memory(2) = memory(1);, memory(1) = food_consumed;
         
        
-        %calculate distance to nearest mound        
+        % Calculate distance to nearest mound        
         mound_dists = zeros(n_mounds,1);
         for m = 1:n_mounds 
             mound = fertilizer_xy(m,:);
@@ -210,7 +213,7 @@ for animal = 1:num_animals
         
         dist_to_closest_mound(t, animal) = min(mound_dists);
         
-        %calculate distance to nearest boundary
+        % Calculate distance to nearest boundary
         dist_to_boundary = [x2; xdim - x2; y2; ydim - y2] - boundary; 
         proximity_to_boundary(t, animal) = min(dist_to_boundary);
         time_until_leaving(animal) = steps;
@@ -299,10 +302,14 @@ title('dung location pileups');
 hold off 
 
 %% Data Export
-writematrix(trajectories, 'dfs/trajectories.csv'); % trajectories
-writematrix(landscape(:,:,1), 'dfs/quantity_end.csv'); % quantity
-writematrix(landscape(:,:,2), 'dfs/nutrition_end.csv'); % nutrition
-writematrix(landscape(:,:,3), 'dfs/dung_end.csv'); % dung
-writematrix(landscape_before_run(:,:,1), 'dfs/quantity_start.csv'); % quantity at start
-writematrix(landscape_before_run(:,:,2), 'dfs/nutrition_start.csv'); % nutrition at start
-writematrix(landscape_before_run(:,:,3), 'dfs/dung_start.csv'); % dung at start
+% Create a "basename" so that all exported csvs share a common format, in
+% the same folder. 'dfs/' folder is required to exist.
+basename = strcat('dfs/', fertilizer_pattern, "_", STRsteps, "_", STRnum_animals, "_");
+% Output .csv files
+writematrix(trajectories, strcat(basename, 'trajectories.csv')); % trajectories
+writematrix(landscape(:,:,1), strcat(basename, 'quantity.csv')); % quantity
+writematrix(landscape(:,:,2), strcat(basename, 'nutrition_end.csv')); % nutrition
+writematrix(landscape(:,:,3), strcat(basename, 'dung_end.csv')); % dung
+writematrix(landscape_before_run(:,:,1), strcat(basename, 'quantity_start.csv')); % quantity at start
+writematrix(landscape_before_run(:,:,2), strcat(basename, 'nutrition_start.csv')); % nutrition at start
+writematrix(landscape_before_run(:,:,3), strcat(basename, 'dung_start.csv')); % dung at start
