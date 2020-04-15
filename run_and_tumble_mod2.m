@@ -1,81 +1,102 @@
 % Contents:
+%     - Set user-defined parameters (required)
 %     - Model Script
 %     - Export metadata
 %     - Model Vizualization
 %     - Data visualization
 
 
+%% SET USER-DEFINED PARAMETERS:
+    % Random, uniform, or neutral (no patches)? (string)
+    fertilizer_pattern = "uniform";
+    % Number of animals to run? (integer)
+    num_animals = 100;  %set number of animals to walk the Earth
+    % Max steps that each animal is allotted? (integer)
+    steps = 200;
+    
+    
+    
+    
+
+
+    
+    
 
 %% Model Script
-%Set variable model parameters
-%%%%grazing parameters
-feed_time = 1; %relative to total movement time (of 1)
-max_feed = 5; %max amount can feed per turn
-energy_spent = 3; %fullness lost per turn
+% Model parameters
+    % Grazing parameters
+    feed_time = 1; %relative to total movement time (of 1)
+    max_feed = 5; %max amount can feed per turn
+    energy_spent = 3; %fullness lost per turn
 
-%%%movement angle/dist parameters
-max_turn_angle = pi;
-angle_ratio = 3; %How much less max turn angle is for run than tumble.
-min_tumb = 0.5; %minimum tumble distance
-max_tumb = 2; %max tumble dist
-run_tumb_ratio = 4; %how much longer is run dist than tumble?
-min_run = min_tumb * run_tumb_ratio;
-max_run = max_tumb * run_tumb_ratio;
-boundary = max_run;
+% Movement angle/dist parameters
+    max_turn_angle = pi;
+    angle_ratio = 3; %How much less max turn angle is for run than tumble.
+    min_tumb = 0.5; %minimum tumble distance
+    max_tumb = 2; %max tumble dist
+    run_tumb_ratio = 4; %how much longer is run dist than tumble?
+    min_run = min_tumb * run_tumb_ratio;
+    max_run = max_tumb * run_tumb_ratio;
+    boundary = max_run;
 
-%parameters for decision-making
-stay_grass = 30;
-stay_nutrition = 5;
-run_nutrition = 3; 
-stop_food = 0.8;
+% Parameters for decision-making
+    stay_grass = 30;
+    stay_nutrition = 5;
+    run_nutrition = 3; 
+    stop_food = 0.8;
 
-%%%landscape parameters (dimension, # animals, mound placement) 
-xdim = 100;
-ydim = 100;
+% Landscape parameters (dimension, # animals, mound placement) 
+    xdim = 100;
+    ydim = 100;
 
 % N mounds need to be the same in both landscapes! 
-n_mounds_side = 5; %if regularly placed.
-n_mounds = n_mounds_side^2; % number of termite mounds if randomly placed
-max_grass = 100; %starting grass/nutrition level for fertilizer patches
-food_ratio = 5; %ratio of initial grass quantity and nutrition on fertilizered patches vs off
-
-steps = 200; %set max time steps
-num_animals = 100;  %set number of animals to walk the Earth
-fertilizer_pattern = 1;  %can be 0: random or 1: uniform.
+    n_mounds_side = 5; %if regularly placed.
+    n_mounds = n_mounds_side^2; % number of termite mounds if randomly placed
+    max_grass = 100; %starting grass/nutrition level for fertilizer patches
+    food_ratio = 5; %ratio of initial grass quantity and nutrition on fertilizered patches vs off
 
 
-%set up fertilizer mound locations
-if fertilizer_pattern == 1 
+% Set up fertilizer mound locations, initialize landscape
+if fertilizer_pattern == "uniform" 
     fert_x = linspace((boundary + 1), (xdim - boundary), n_mounds_side);
     fert_y = linspace((boundary + 1), (ydim - boundary), n_mounds_side);
     %fert_x(1) = [];, fert_x(end) = []; %Remove fertilizer right on edge
     %fert_y(1) = [];, fert_y(end) = []; %Remove fertilizer right on edge
     [X,Y] = meshgrid(fert_x, fert_y);
     fertilizer_xy = round([X(:), Y(:)]);
-elseif fertilizer_pattern == 0
+    landscape = initialize_landscape_1(xdim, ydim, fertilizer_xy, max_grass, food_ratio);
+    landscape_before_run = landscape; % take snapshot of first frame for later reference
+elseif fertilizer_pattern == "random"
     %random_fert = [randi([1 xdim],1,n_mounds) ; randi([1 ydim],1,n_mounds)];
     %fertilizer_xy = transpose(random_fert);
     %Above allows fertilizer patches outside the boundary.
     fert_x = randi([(1+boundary), (xdim - boundary)], 1, n_mounds);
     fert_y = randi([(1+boundary), (ydim - boundary)], 1, n_mounds);
     fertilizer_xy = transpose( [fert_x; fert_y]);
-end 
+    landscape = initialize_landscape_1(xdim, ydim, fertilizer_xy, max_grass, food_ratio);
+    landscape_before_run = landscape; % take snapshot of first frame for later reference
+elseif fertilizer_pattern == "neutral"
+    fert_x = linspace((boundary + 1), (xdim - boundary), n_mounds_side);
+    fert_y = linspace((boundary + 1), (ydim - boundary), n_mounds_side);
+    [X,Y] = meshgrid(fert_x, fert_y);
+    fertilizer_xy = randi([0, 100], 25, 2); % creeates a random distribution of nutrient
+else
+    disp("Fertilizer pattern not recognized: exiting script")
+    clearvars
+    return
+end     
+    
+% Preallocate dataframe to track landscape over time
+    landscape_over_time = zeros(xdim, ydim, num_animals);
 
 
-%ready to initialize landscape
-landscape = initialize_landscape_1(xdim, ydim, fertilizer_xy, max_grass, food_ratio);
-landscape_before_run = landscape; % take snapshot of first frame for later reference
-% Preallocate dataframe to track food concentration over time
-landscape_time = zeros(xdim, ydim, steps);
+%STEP 2: agents move through landscape.
 
+% Record trajectory of all animals. First three columns are first animal,
+% fourth through sixth columns are second animal, etc. x, y coords then
+% food consumed at that step.
 
-%STEP2: agents move through landscape.
-
-%Record trajectory of all animals. First three columns are first animal,
-%fourth through sixth columns are second animal, etc. x, y coords then
-%food consumed at that step.
-
-%trajectories are saved as xpos, ypos, and fullness for each agent. 
+% Trajectories are saved as xpos, ypos, and fullness for each agent. 
 trajectories = zeros(steps, 3*num_animals);
 time_until_leaving = zeros(num_animals,1); %record time animal exits
 dist_to_closest_mound = zeros(steps, num_animals);
@@ -117,6 +138,8 @@ for animal = 1:num_animals
     leave = 0;
     memory(:) = 0;
     %memory(1) is most recent, (3) least recent.
+    
+    %landscape_over_time = landscape_over_time(:,:,landscape(:,:,1);
     
     for t=1:steps
         
