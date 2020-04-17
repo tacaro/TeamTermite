@@ -1,8 +1,25 @@
-% Contents:
-%     - Set User-Defined Parameters
-%     - Model Script
-%     - Model Vizualization
-%     - Export Metadata
+%{
+Initialize landscape for Doak-Peleg rotation project with
+Liam Friar, Jack Gugel, Ellen Waddle, and Tristan Caro.
+
+Landscape is a square grid. Agents can move at a finer scale.
+Each point on grid stores visitation/dung count, current grass quantity,
+nutritional quality.
+Location of termite mounds or fertilization patches will be an initial
+input, and initial attributes of grid points will be determined from those
+inputs.
+
+Note: x dimension refers to column, and y dimension to row. X dimension
+increases left to right, Y dimension top to bottom.
+%}
+
+%{ 
+Contents:
+     - Set User-Defined Parameters
+     - Model Script
+     - Model Vizualization
+    - Export Metadata
+%}
 
 
 
@@ -11,10 +28,10 @@
     fertilizer_pattern = "random";
     % Number of animals to run? (integer)
     num_animals = 100;  %set number of animals to walk the Earth
-    STRnum_animals = num2str(num_animals); % add a string version for data export
+    STRnum_animals = num2str(num_animals); % make a string version for data export
     % Max steps that each animal is allotted? (integer)
     steps = 200;
-    STRsteps = num2str(steps); % add a string version for data export
+    STRsteps = num2str(steps); % make a string version for data export
 
     
     
@@ -59,8 +76,13 @@
     n_mounds_side = 5; %if regularly placed.
     n_mounds = n_mounds_side^2; % number of termite mounds if randomly placed
     max_grass = 100; %starting grass/nutrition level for fertilizer patches
-    food_ratio = 5; %ratio of initial grass quantity and nutrition on fertilizered patches vs off
 
+%ratio of initial grass quantity and nutrition on fertilizered patches vs off
+if fertilizer_pattern == "neutral"
+    food_ratio = 1;
+else
+    food_ratio = 5;
+end
 
 % Set up fertilizer mound locations, initialize landscape
 if fertilizer_pattern == "uniform" 
@@ -84,8 +106,12 @@ elseif fertilizer_pattern == "random"
 elseif fertilizer_pattern == "neutral"
     fert_x = linspace((boundary + 1), (xdim - boundary), n_mounds_side);
     fert_y = linspace((boundary + 1), (ydim - boundary), n_mounds_side);
+    %fert_x(1) = [];, fert_x(end) = []; %Remove fertilizer right on edge
+    %fert_y(1) = [];, fert_y(end) = []; %Remove fertilizer right on edge
     [X,Y] = meshgrid(fert_x, fert_y);
-    fertilizer_xy = randi([0, 100], 25, 2); % creeates a random distribution of nutrient
+    fertilizer_xy = round([X(:), Y(:)]);
+    landscape = initialize_landscape_1(xdim, ydim, fertilizer_xy, max_grass, food_ratio);
+    landscape_before_run = landscape; % take snapshot of first frame for later reference
 else
     disp("Exception: Fertilizer pattern not recognized. The options are 'random', 'uniform', and 'neutral'.")
     clearvars
@@ -229,6 +255,7 @@ for animal = 1:num_animals
 
 end
 
+
 %% Visualization
 
 % Time spent on landscape
@@ -303,6 +330,42 @@ end
     end 
     title('dung location pileups');
     hold off 
+    
+    
+    
+%% Residency File Creation
+
+landscape_time_bi = landscape_over_time;
+landscape_time_bi=landscape_time_bi > 50;
+
+% Reshape the trajectories matrix to be 3D matrix
+% where there are 3 columns: x, y, and fullness
+% each flat matrix represents a single animal.
+traj = reshape(trajectories, steps+1, 3, num_animals);
+
+% Initialize residency tracking matrix
+residency = zeros(num_animals, 2);
+
+for page = 1:size(traj, 3) % for every page in the 3d matrix
+
+    for line = 1:size(traj, 1) % for every line in the page
+        x = traj(line, 1, page); % note the x coord
+        y = traj(line, 2, page); % note the y coord
+        if isnan(x) || isnan(y) % if the x or y coordinates are NaN
+            continue % skip this iteration
+        end
+        if landscape_over_time(round(x),round(y)) > 50 % if the x,y coords of landscape are in TRUE (high nutrient)
+            residency(page, 2) = residency(page, 2) + 1; % add one to the value
+        %elseif landscape_over_time(round(x),round(y)) == 0 % else if x,y are in FALSE (low nutrient)
+           %residency(page, 2) = residency(page, 2) + 0; % add zero the the value
+        end
+    end
+    
+end
+
+for line = 1:size(residency,1)
+    residency(line, 1) = line;
+end
 
 %% Data Export
 % Create a "basename" so that all exported csvs share a common format, in
@@ -310,6 +373,7 @@ end
 basename = strcat('dfs/', fertilizer_pattern, "_", STRsteps, "_", STRnum_animals, "_");
 % Output .csv files
 disp("Saving files . . .")
+writematrix(residency, strcat(basename, 'residency.csv')); % residency time, in ticks
 writematrix(trajectories, strcat(basename, 'trajectories.csv')); % trajectories
 writematrix(landscape(:,:,1), strcat(basename, 'quantity_end.csv')); % quantity
 writematrix(landscape(:,:,2), strcat(basename, 'nutrition_end.csv')); % nutrition
@@ -326,3 +390,5 @@ dynamic_landscape = reshape(dynamic_landscape, [], size(landscape_over_time, 2),
 writematrix(dynamic_landscape, strcat(basename, 'dynamic_landscape.csv'));
 
 disp("All files saved successfully")
+
+
