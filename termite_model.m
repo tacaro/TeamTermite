@@ -25,9 +25,9 @@ Contents:
 
 %% SET USER-DEFINED PARAMETERS:
     % Random, uniform, or neutral (no patches)? (string)
-    fertilizer_pattern = "random";
+    fertilizer_pattern = "uniform";
     % Number of animals to run? (integer)
-    num_animals = 100;  %set number of animals to walk the Earth
+    num_animals = 300;  %set number of animals to walk the Earth
     STRnum_animals = num2str(num_animals); % make a string version for data export
     % Max steps that each animal is allotted? (integer)
     steps = 200;
