@@ -18,13 +18,13 @@ Contents:
      - Set User-Defined Parameters
      - Model Script
      - Model Vizualization
-    - Export Metadata
+     - Export Metadata
 %}
 
 
 
 %% SET USER-DEFINED PARAMETERS:
-    % Random, uniform, or neutral (no patches)? (string)
+    % random, uniform, or neutral (no patches)? (string)
     fertilizer_pattern = "uniform";
     % Number of animals to run? (integer)
     num_animals = 300;  %set number of animals to walk the Earth
@@ -32,7 +32,7 @@ Contents:
     % Max steps that each animal is allotted? (integer)
     steps = 200;
     STRsteps = num2str(steps); % make a string version for data export
-
+    
     
     
     
@@ -368,11 +368,20 @@ for line = 1:size(residency,1)
 end
 
 %% Data Export
+% Create a hash key that is unique to this simulation run
+% The key is current datetime + two random AZ characters
+now = num2str(fix(clock));
+now = now(~isspace(now));
+run_ID = strcat(now, randsample(char(97:122), 2));
+mkdir(['dfs/' run_ID]);
+
+
 % Create a "basename" so that all exported csvs share a common format, in
 % the same folder. 'dfs/' folder is required to exist.
-basename = strcat('dfs/', fertilizer_pattern, "_", STRsteps, "_", STRnum_animals, "_");
+basename = strcat('dfs/', run_ID, "/", fertilizer_pattern, "_", STRsteps, "_", STRnum_animals, "_");
 % Output .csv files
 disp("Saving files . . .")
+disp(strcat("This run's identifier is:", run_ID));
 writematrix(residency, strcat(basename, 'residency.csv')); % residency time, in ticks
 writematrix(trajectories, strcat(basename, 'trajectories.csv')); % trajectories
 writematrix(landscape(:,:,1), strcat(basename, 'quantity_end.csv')); % quantity
