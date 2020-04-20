@@ -422,6 +422,8 @@ dynamic_landscape = permute(landscape_over_time, [1 3 2]);
 dynamic_landscape = reshape(dynamic_landscape, [], size(landscape_over_time, 2), 1);
 writematrix(dynamic_landscape, strcat(basename, 'dynamic_landscape.csv'));
 
-disp("All files saved successfully")
+disp("All files saved successfully!")
+
+% Done :)
 
 
