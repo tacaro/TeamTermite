@@ -7,6 +7,8 @@ Current working script: **termite_model.m**
 Data export: The model now exports simulation data in .csv format. To keep this tidy, in the Data Export section, I generate a unique `run_ID`, create a new directory using `run_ID`, and save all the data there. The files are saved with their names' containing specific information about the number of animals, the number of steps, and the fertilizer pattern. For example:
 `uniform_200_300_dung_end.csv` is a uniform plot, 200 steps, 300 animals, containing the dung counts at the end of the simulation.
 
+In order to analyze data from different simulation runs down the road, we'll need to know after-the-fact what the key parameters were. To keep track of these values, I organize them into a cell array and then export them as a .csv. This file is called 'metadata' and is found in the directory containing simulation data.
+
 Key user-defined parameters are defined at the start of the script. I added "sections" using the double %% notation.
 
 Saving the entire landscape as it changes through time: `landscape_over_time` is a three dimensional matrix, each z-slice containing a snapshot of the matrix after the z'th animal completes its journey. These large files are notated as `dynamic_landscape` and are saved in .csv format by concatenating each snapshot below the next. Careful: these files get very large (MB) very quickly!
