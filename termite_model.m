@@ -379,17 +379,41 @@ mkdir(['dfs/' run_ID]);
 % Create a "basename" so that all exported csvs share a common format, in
 % the same folder. 'dfs/' folder is required to exist.
 basename = strcat('dfs/', run_ID, "/", fertilizer_pattern, "_", STRsteps, "_", STRnum_animals, "_");
+
+% Output metadata file
+    % Create a cell array containing useful simulation parameters
+    MTDA = {'run_ID', run_ID;
+            'fertilizer_pattern', fertilizer_pattern;
+            'max_steps', steps;
+            'num_animals', num_animals;
+            'food_ratio', food_ratio;
+            'max_feed', max_feed;
+            'max_grass', max_grass;
+            'max_run', max_run;
+            'max_tumb', max_tumb;
+            'max_turn_angle', max_turn_angle;
+            'min_run', min_run;
+            'min_tumb', min_tumb;
+            'n_mounds', n_mounds;
+            'stay_grass', stay_grass;
+            'stay_nutrition', stay_nutrition;
+            'run_nutrition', run_nutrition;
+            'stop_food', stop_food;
+            };
+      MTDA = cell2table(MTDA, 'VariableNames', {'Parameter', 'Value'});
+      writetable(MTDA, strcat(basename, 'metadata.csv'));
+
 % Output .csv files
-disp("Saving files . . .")
-disp(strcat("This run's identifier is:", run_ID));
-writematrix(residency, strcat(basename, 'residency.csv')); % residency time, in ticks
-writematrix(trajectories, strcat(basename, 'trajectories.csv')); % trajectories
-writematrix(landscape(:,:,1), strcat(basename, 'quantity_end.csv')); % quantity
-writematrix(landscape(:,:,2), strcat(basename, 'nutrition_end.csv')); % nutrition
-writematrix(landscape(:,:,3), strcat(basename, 'dung_end.csv')); % dung
-writematrix(landscape_before_run(:,:,1), strcat(basename, 'quantity_start.csv')); % quantity at start
-writematrix(landscape_before_run(:,:,2), strcat(basename, 'nutrition_start.csv')); % nutrition at start
-writematrix(landscape_before_run(:,:,3), strcat(basename, 'dung_start.csv')); % dung at start
+    disp("Saving files . . .")
+    disp(strcat("This run's identifier is:", run_ID));
+    writematrix(residency, strcat(basename, 'residency.csv')); % residency time, in ticks
+    writematrix(trajectories, strcat(basename, 'trajectories.csv')); % trajectories
+    writematrix(landscape(:,:,1), strcat(basename, 'quantity_end.csv')); % quantity
+    writematrix(landscape(:,:,2), strcat(basename, 'nutrition_end.csv')); % nutrition
+    writematrix(landscape(:,:,3), strcat(basename, 'dung_end.csv')); % dung
+    writematrix(landscape_before_run(:,:,1), strcat(basename, 'quantity_start.csv')); % quantity at start
+    writematrix(landscape_before_run(:,:,2), strcat(basename, 'nutrition_start.csv')); % nutrition at start
+    writematrix(landscape_before_run(:,:,3), strcat(basename, 'dung_start.csv')); % dung at start
 
 % In order to export the three dimensional landscape_over_time matrix in a way that makes sense
 % I'm going to export it as a two dimensional matrix with each slice pasted
