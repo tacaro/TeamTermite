@@ -36,11 +36,11 @@ ydim = 100;
 % N mounds need to be the same in both landscapes! 
 n_mounds_side = 5; %if regularly placed.
 n_mounds = n_mounds_side^2; % number of termite mounds if randomly placed
-max_grass = 100; %starting grass/nutrition level for fertilizer patches
-food_ratio = 5; %ratio of initial grass quantity and nutrition on fertilizered patches vs off
+max_grass = 27.4; %starting grass/nutrition level for fertilizer patches
+food_ratio = 1; %ratio of initial grass quantity and nutrition on fertilizered patches vs off
 
 steps = 200; %set max time steps
-num_animals = 100;  %set number of animals to walk the Earth
+num_animals = 0;  %set number of animals to walk the Earth
 fertilizer_pattern = 1;  %can be 0: random or 1: uniform.
 
 
