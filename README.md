@@ -1,7 +1,23 @@
 # TeamTermite
 Agent based model of ungulate grazing amid nutrient-rich termite mounds
 
-Current working script: **run_and_tumble_mod2.m**
+Current working script: **termite_model.m**
+
+**Tristan's Notes as of 4/19**
+Data export: The model now exports simulation data in .csv format. To keep this tidy, in the Data Export section, I generate a unique `run_ID`, create a new directory using `run_ID`, and save all the data there. The files are saved with their names' containing specific information about the number of animals, the number of steps, and the fertilizer pattern. For example:
+`uniform_200_300_dung_end.csv` is a uniform plot, 200 steps, 300 animals, containing the dung counts at the end of the simulation.
+
+In order to analyze data from different simulation runs down the road, we'll need to know after-the-fact what the key parameters were. To keep track of these values, I organize them into a cell array and then export them as a .csv. This file is called 'metadata' and is found in the directory containing simulation data.
+
+Key user-defined parameters are defined at the start of the script. I added "sections" using the double %% notation.
+
+Saving the entire landscape as it changes through time: `landscape_over_time` is a three dimensional matrix, each z-slice containing a snapshot of the matrix after the z'th animal completes its journey. These large files are notated as `dynamic_landscape` and are saved in .csv format by concatenating each snapshot below the next. Careful: these files get very large (MB) very quickly!
+
+Tracking residency time: Within `%% Residency File Creation`, the time an animal spends in a high nutrient patch is calculated by binarizing the `landscape_over_time`, where high nutrient values are TRUE; low nutrient values are FALSE. The trajectory values are then mapped onto the binarized landscape, `landscape_time_bi`. The number of trajectory xy pairs that map to TRUE landscape coordinates is summed for each animal. This data is then exported as `residency.csv`.
+
+R analysis: In the R_analysis folder lives `residence_time.R`, a script that takes in a `residency.csv` corresponding to a random and uniform landscape. The script generates a boxplot showing the relative residency times for both conditions. As of 4/19, a second type of boxplot is generated where I remove "zero values", or animals that spent zero time steps in a high nutrient patch. This filters out animals that quickly contacted the boundary. On this note, I think it would also be useful to determine the *relative proportion* of residency in high_nutrient patch, as opposed to absolute values.
+
+Under construction: I made a copy of the termite_model.m called `termite_model_batchrunner.m` that can hopefully run large batches of simulations at once over a range of parameters. This doesn't work yet!
 
 **4/13 Meeting Notes**
 - Change mound shape from point source with decreasing quantity in favor of "step-function" where there are high quality and low quality spots.
