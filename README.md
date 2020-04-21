@@ -26,7 +26,7 @@ I didn’t write down what Tristan/Jack were already working on, and definitely 
 ->Make max steps really high (like 1000)
 ->Put some dots or circles where the mounds are on plots such as dung counts.
 	
-->Track total distance moved by each animal.
+->Track total distance moved by each animal.'
 ->Track total depletion of mounds.
 ->Track average number of steps between mounds.
 ->Track likelihood of finding a second patch if found a first patch.
