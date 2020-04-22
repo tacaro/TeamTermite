@@ -76,8 +76,8 @@ Contents:
     max_run = max_tumb * run_tumb_ratio;
     boundary = max_run;
     if run4ever
-        min_run = xdim;
-        max_run = xdim;
+        min_run = 2*xdim;
+        max_run = 2*xdim;
     end
     if random_walk
         min_tumb = min_run;
