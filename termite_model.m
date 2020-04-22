@@ -32,6 +32,7 @@ Contents:
     % Max steps that each animal is allotted? (integer)
     steps = 200;
     STRsteps = num2str(steps); % make a string version for data export
+    able2stop = false; %If set to false, animals will not stop if they cross a good patch.
     
     
     
@@ -218,7 +219,7 @@ for animal = 1:num_animals
         % returned x2 and y2 will be different from inputs if animal crossed
         % boundary or crossed a good patch and stopped.
         [landscape, grass_consumed, nutrition, x2, y2, leave] = ...
-            move_and_feed_1(landscape, x1, y1, x2, y2, boundary, max_feed, max_grass, feed_time, stop_food);
+            move_and_feed_1(landscape, x1, y1, x2, y2, boundary, max_feed, max_grass, feed_time, stop_food, able2stop);
         if leave == 1
             for remaining_steps = t+1 : steps+1
                 trajectories(remaining_steps, animal_x : animal_z) = NaN;
