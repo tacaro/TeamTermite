@@ -26,15 +26,17 @@ Contents:
 %% SET USER-DEFINED PARAMETERS:
     % random or uniform, (neutral)? (string)
     fertilizer_pattern = "random";
-    has_patches = true; %if false, landcape has same number of individual fertile grid squares, but arranged as single squares instead of in patches.
+    has_patches = false; %if false, landcape has same number of individual fertile grid squares, but arranged as single squares instead of in patches.
     % Number of animals to run? (integer)
     num_animals = 300;  %set number of animals to walk the Earth
     STRnum_animals = num2str(num_animals); % make a string version for data export
     % Max steps that each animal is allotted? (integer)
     steps = 200;
     STRsteps = num2str(steps); % make a string version for data export
-    able2stop = false; %If set to false, animals will not stop if they cross a good patch.
-    
+    %Movement strategy options
+    able2stop = true; %If true, animals will stop, feed, and end step if they cross a good patch.
+    run4ever = false; %if true, there is no max distance traveled while running.
+    random_walk = true; %if true, animals move in a true random walk. 
     
     
     
@@ -49,11 +51,21 @@ Contents:
 
 %% Model Script
 % Model parameters
-    % Grazing parameters
+% Grazing parameters
     feed_time = 1; %relative to total movement time (of 1)
     max_feed = 5; %max amount can feed per turn
     energy_spent = 3; %fullness lost per turn
 
+% Landscape parameters (dimension, # animals, mound placement) 
+    xdim = 100;
+    ydim = 100;
+    mound_radius = 3.5; % if change, need to change the "if ~has_patches block below"
+% N mounds need to be the same in both landscapes! 
+    n_mounds_side = 5; %if regularly placed.
+    n_mounds = n_mounds_side^2; % number of termite mounds if randomly placed
+    max_grass = 100; %starting grass/nutrition level for fertilizer patches
+    food_ratio = 5; %ratio of initial grass quantity and nutrition on fertilizered patches vs off
+    
 % Movement angle/dist parameters
     max_turn_angle = pi;
     angle_ratio = 3; %How much less max turn angle is for run than tumble.
@@ -63,6 +75,16 @@ Contents:
     min_run = min_tumb * run_tumb_ratio;
     max_run = max_tumb * run_tumb_ratio;
     boundary = max_run;
+    if run4ever
+        min_run = xdim;
+        max_run = xdim;
+    end
+    if random_walk
+        min_tumb = min_run;
+        max_tumb = max_run;
+        angle_ratio = 1;
+        max_turn_angle = pi;
+    end
 
 % Parameters for decision-making
     stay_grass = 30;
@@ -70,22 +92,14 @@ Contents:
     run_nutrition = 3; 
     stop_food = 0.8;
 
-% Landscape parameters (dimension, # animals, mound placement) 
-    xdim = 100;
-    ydim = 100;
-    mound_radius = 3.5;
-% N mounds need to be the same in both landscapes! 
-    n_mounds_side = 5; %if regularly placed.
-    n_mounds = n_mounds_side^2; % number of termite mounds if randomly placed
-    max_grass = 100; %starting grass/nutrition level for fertilizer patches
-
-%ratio of initial grass quantity and nutrition on fertilizered patches vs off
+%{
 if fertilizer_pattern == "neutral"
     food_ratio = 1;
 else
     food_ratio = 5;
 end
-
+%}
+    
 if ~has_patches %No patches! individual fertile squares!
     size_circle = 37; %hardcoded in for mound_radius 3.5
     n_mounds = n_mounds*size_circle;

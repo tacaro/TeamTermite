@@ -14,8 +14,8 @@ for build_mound = (n_mounds - (n_mounds2add - 1)) : n_mounds
         for compare_mound = 1 : build_mound-1 %Check for overlap
             x_dist = fert_x - fertilizer_xy(compare_mound, 1);
             y_dist = fert_y - fertilizer_xy(compare_mound, 2);
-            dist_between = round(sqrt(x_dist^2 + y_dist^2));
-            if dist_between < 2 * mound_radius + 1
+            dist_between = round(sqrt(x_dist^2 + y_dist^2), 2);
+            if dist_between < 2 * mound_radius
                 overlaps = true;
                 break
             end    

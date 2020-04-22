@@ -34,15 +34,17 @@ for square = 2:num_squares
         x_stop = crossing_array(square, 1);
         y_stop = crossing_array(square, 2);
         leave = 1;
+        %disp("leave"), disp(xx), disp(yy), disp(x_stop), disp(y_stop)
         break
     end    
 end
 
 %Stop?
-for square = 2:num_squares %can't stop in same square as started.
-    
-    if able2stop
-        if landscape(yy, xx, 1) .* landscape(yy, xx, 1) / max_grass > stop_food %Make this connect to parameters from top of run_and_tumble
+if able2stop
+    for square = 2:num_squares %can't stop in same square as started.
+        xx = path_array(square, 1);
+        yy = path_array(square, 2);
+        if landscape(yy, xx, 1) * landscape(yy, xx, 2) / max_grass > stop_food %Make this connect to parameters from top of run_and_tumble
             path_array( (square + 1 : num_squares), : ) = [];
             path_array(square, 3) = path_array(square, 3)/2;
             %path_array ends halfway through stopping patch.
@@ -54,7 +56,7 @@ for square = 2:num_squares %can't stop in same square as started.
             x_stop = (x_i + x_f) / 2;
             y_stop = (y_i + y_f) / 2;
             leave = 0; %In case left, but now stopped before leaving
-       
+            disp("stop"), disp(xx), disp(yy), disp(landscape(yy,xx,1))
             break
         end
     end
