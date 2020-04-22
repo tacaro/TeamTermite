@@ -25,7 +25,7 @@ Contents:
 
 %% SET USER-DEFINED PARAMETERS:
     % random or uniform, (neutral)? (string)
-    fertilizer_pattern = "random";
+    fertilizer_pattern = "uniform";
     has_patches = false; %if false, landcape has same number of individual fertile grid squares, but arranged as single squares instead of in patches.
     % Number of animals to run? (integer)
     num_animals = 300;  %set number of animals to walk the Earth
@@ -36,7 +36,7 @@ Contents:
     %Movement strategy options
     able2stop = true; %If true, animals will stop, feed, and end step if they cross a good patch.
     run4ever = false; %if true, there is no max distance traveled while running.
-    random_walk = true; %if true, animals move in a true random walk. 
+    random_walk = false; %if true, animals move in a true random walk. 
     
     
     
@@ -112,8 +112,8 @@ end
 
 % Set up fertilizer mound locations, initialize landscape
 if fertilizer_pattern == "uniform" 
-    fert_x = linspace((boundary + 1), (xdim - boundary), n_mounds_side);
-    fert_y = linspace((boundary + 1), (ydim - boundary), n_mounds_side);
+    fert_x = linspace((boundary + 1 + floor(mound_radius)), (xdim - boundary - floor(mound_radius)), n_mounds_side);
+    fert_y = linspace((boundary + 1 + floor(mound_radius)), (ydim - boundary - floor(mound_radius)), n_mounds_side);
     %fert_x(1) = [];, fert_x(end) = []; %Remove fertilizer right on edge
     %fert_y(1) = [];, fert_y(end) = []; %Remove fertilizer right on edge
     [X,Y] = meshgrid(fert_x, fert_y);

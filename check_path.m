@@ -56,7 +56,7 @@ if able2stop
             x_stop = (x_i + x_f) / 2;
             y_stop = (y_i + y_f) / 2;
             leave = 0; %In case left, but now stopped before leaving
-            disp("stop"), disp(xx), disp(yy), disp(landscape(yy,xx,1))
+            %disp("stop"), disp(xx), disp(yy), disp(landscape(yy,xx,1))
             break
         end
     end

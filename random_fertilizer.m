@@ -9,8 +9,8 @@ for build_mound = (n_mounds - (n_mounds2add - 1)) : n_mounds
    overlaps = true;
    while overlaps %Will keep generating random xy points until one does not overlap.
         overlaps = false;
-        fert_x = randi([(1+boundary), (xdim - boundary)]);
-        fert_y = randi([(1+boundary), (ydim - boundary)]);
+        fert_x = randi([(1+boundary + floor(mound_radius)), (xdim - boundary - floor(mound_radius))]);
+        fert_y = randi([(1+boundary + floor(mound_radius)), (ydim - boundary - floor(mound_radius))]);
         for compare_mound = 1 : build_mound-1 %Check for overlap
             x_dist = fert_x - fertilizer_xy(compare_mound, 1);
             y_dist = fert_y - fertilizer_xy(compare_mound, 2);
