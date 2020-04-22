@@ -30,23 +30,6 @@ function [landscape, grass_consumed, nutrition, x_stop, y_stop, leave] = move_an
     x2, y2, boundary, max_feed, max_grass, feed_time, stop_food)
 
 
-
-%LEAVE?
-%{
-if (x2 + boundary) > size(landscape, 2) || ...
-        (x2 - boundary) < 1 || (y2 + boundary) > size(landscape,1) || ...
-        (y2 - boundary) < 1
-    leave = true;
-    grass_consumed = 0;
-    nutrition = 0;
-    x_stop = x2;
-    y_stop = y2;
-    return
-    %does not record animal's path as it exists (could add that function to check_path)
-else
-    leave = false;
-end
-%}
 %MOVE
 
 

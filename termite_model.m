@@ -217,7 +217,7 @@ for animal = 1:num_animals
         % Update landscape and trajectories array
         % returned x2 and y2 will be different from inputs if animal crossed
         % boundary or crossed a good patch and stopped.
-        [landscape, grass_consumed, nutrition, x_stop, y_stop, leave] = ...
+        [landscape, grass_consumed, nutrition, x2, y2, leave] = ...
             move_and_feed_1(landscape, x1, y1, x2, y2, boundary, max_feed, max_grass, feed_time, stop_food);
         if leave == 1
             for remaining_steps = t+1 : steps+1
