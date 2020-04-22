@@ -24,8 +24,9 @@ Contents:
 
 
 %% SET USER-DEFINED PARAMETERS:
-    % random, uniform, or neutral (no patches)? (string)
-    fertilizer_pattern = "uniform";
+    % random or uniform, (neutral)? (string)
+    fertilizer_pattern = "random";
+    has_patches = true; %if false, landcape has same number of individual fertile grid squares, but arranged as single squares instead of in patches.
     % Number of animals to run? (integer)
     num_animals = 300;  %set number of animals to walk the Earth
     STRnum_animals = num2str(num_animals); % make a string version for data export
@@ -72,7 +73,7 @@ Contents:
 % Landscape parameters (dimension, # animals, mound placement) 
     xdim = 100;
     ydim = 100;
-
+    mound_radius = 3.5;
 % N mounds need to be the same in both landscapes! 
     n_mounds_side = 5; %if regularly placed.
     n_mounds = n_mounds_side^2; % number of termite mounds if randomly placed
@@ -85,6 +86,16 @@ else
     food_ratio = 5;
 end
 
+if ~has_patches %No patches! individual fertile squares!
+    size_circle = 37; %hardcoded in for mound_radius 3.5
+    n_mounds = n_mounds*size_circle;
+    n_mounds_side = floor(sqrt(n_mounds));
+    n_mounds_extra = n_mounds - n_mounds_side^2;
+    mound_radius = 0.5;
+else
+    n_mounds_extra = 0;
+end  
+
 % Set up fertilizer mound locations, initialize landscape
 if fertilizer_pattern == "uniform" 
     fert_x = linspace((boundary + 1), (xdim - boundary), n_mounds_side);
@@ -93,8 +104,17 @@ if fertilizer_pattern == "uniform"
     %fert_y(1) = [];, fert_y(end) = []; %Remove fertilizer right on edge
     [X,Y] = meshgrid(fert_x, fert_y);
     fertilizer_xy = round([X(:), Y(:)]);
-    landscape = initialize_landscape_1(xdim, ydim, fertilizer_xy, max_grass, food_ratio);
+    if n_mounds_extra ~= 0  %The circles do not contain a perfect square number of gridspaces, so randomly assign remainder.
+        fertilizer_xy = random_fertilizer(fertilizer_xy, n_mounds_extra, xdim, ydim, boundary, mound_radius);    
+    end
+    landscape = initialize_landscape_1(xdim, ydim, fertilizer_xy, max_grass, food_ratio, mound_radius);
+    landscape_before_run = landscape; % take snapshot of first frame for later reference 
+elseif fertilizer_pattern == "random"
+    fertilizer_xy = zeros(n_mounds, 2);
+    fertilizer_xy = random_fertilizer(fertilizer_xy, n_mounds, xdim, ydim, boundary, mound_radius);
+    landscape = initialize_landscape_1(xdim, ydim, fertilizer_xy, max_grass, food_ratio, mound_radius);
     landscape_before_run = landscape; % take snapshot of first frame for later reference
+ %{
 elseif fertilizer_pattern == "random"
     %random_fert = [randi([1 xdim],1,n_mounds) ; randi([1 ydim],1,n_mounds)];
     %fertilizer_xy = transpose(random_fert);
@@ -102,8 +122,10 @@ elseif fertilizer_pattern == "random"
     fert_x = randi([(1+boundary), (xdim - boundary)], 1, n_mounds);
     fert_y = randi([(1+boundary), (ydim - boundary)], 1, n_mounds);
     fertilizer_xy = transpose( [fert_x; fert_y]);
-    landscape = initialize_landscape_1(xdim, ydim, fertilizer_xy, max_grass, food_ratio);
+    landscape = initialize_landscape_1(xdim, ydim, fertilizer_xy, max_grass, food_ratio, mound_radius);
     landscape_before_run = landscape; % take snapshot of first frame for later reference
+%}
+        %{
 elseif fertilizer_pattern == "neutral"
     fert_x = linspace((boundary + 1), (xdim - boundary), n_mounds_side);
     fert_y = linspace((boundary + 1), (ydim - boundary), n_mounds_side);
@@ -111,8 +133,9 @@ elseif fertilizer_pattern == "neutral"
     %fert_y(1) = [];, fert_y(end) = []; %Remove fertilizer right on edge
     [X,Y] = meshgrid(fert_x, fert_y);
     fertilizer_xy = round([X(:), Y(:)]);
-    landscape = initialize_landscape_1(xdim, ydim, fertilizer_xy, max_grass, food_ratio);
+    landscape = initialize_landscape_1(xdim, ydim, fertilizer_xy, max_grass, food_ratio, mound_radius);
     landscape_before_run = landscape; % take snapshot of first frame for later reference
+%}
 else
     disp("Exception: Fertilizer pattern not recognized. The options are 'random', 'uniform', and 'neutral'.")
     clearvars
@@ -237,16 +260,18 @@ for animal = 1:num_animals
         memory(3) = memory(2);, memory(2) = memory(1);, memory(1) = food_consumed;
         
        
-        % Calculate distance to nearest mound        
-        mound_dists = zeros(n_mounds,1);
-        for m = 1:n_mounds 
-            mound = fertilizer_xy(m,:);
-            pts = [mound; x2,y2];
-            mound_dists(m) = pdist(pts, 'euclidean');
-        end 
-        
-        dist_to_closest_mound(t, animal) = min(mound_dists);
-        
+        % Calculate distance to nearest mound  
+        if has_patches
+            mound_dists = zeros(n_mounds,1);
+            for m = 1:n_mounds 
+                mound = fertilizer_xy(m,:);
+                pts = [mound; x2,y2];
+                mound_dists(m) = pdist(pts, 'euclidean');
+            end 
+
+            dist_to_closest_mound(t, animal) = min(mound_dists);
+        end
+        %}
         % Calculate distance to nearest boundary
         dist_to_boundary = [x2; xdim - x2; y2; ydim - y2] - boundary; 
         proximity_to_boundary(t, animal) = min(dist_to_boundary);

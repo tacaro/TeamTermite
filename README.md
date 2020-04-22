@@ -15,9 +15,9 @@ It seemed like Dan and Orit liked the idea of the control landscape starting as 
 Liam can implement this while debugging move_and_feed.
 
 ->Dan was curious about a run and tumble with no stop option, and Orit was curious about a run and tumble with no maximum distance traveled on the run steps. Maybe a true random walk would be a good control as well? Any of these options are probably secondary to getting some good data with the current implementation.
-->Would just need to comment out the section of check_path that checks for good patches in order to run dan’s version.
+->Added able2stop which (if false) does not allow stopping.
 ->Would just need to make the run distance = xdim in order to run Orit’s version.
-->For a true random walk, just make the run angles [-pi, pi] and make the run vs. tumble decision always run.
+->For a true random walk, just make the run angles [-pi, pi] and the angle and distance ratios both 1.
 
 Data collection and analysis:
 	
