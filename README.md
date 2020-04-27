@@ -3,6 +3,40 @@ Agent based model of ungulate grazing amid nutrient-rich termite mounds
 
 Current working script: **termite_model.m**
 
+
+**Notes after meetings 4-21 (Liam)**
+
+We are pretty confident with the model, and are moving into data analysis.
+
+Big questions:
+
+->Random vs. regular (uniform) vs control landscape:
+It seemed like Dan and Orit liked the idea of the control landscape starting as a binary landscape with the same number of, and values for, the fertile and background grid squares, but that the fertile grid squares are assigned randomly and individually instead of in fertilizer circles.
+Liam can implement this while debugging move_and_feed.
+
+->Dan was curious about a run and tumble with no stop option, and Orit was curious about a run and tumble with no maximum distance traveled on the run steps. Maybe a true random walk would be a good control as well? Any of these options are probably secondary to getting some good data with the current implementation.
+->Added able2stop which (if false) does not allow stopping.
+->Would just need to make the run distance = xdim in order to run Orit’s version.
+->For a true random walk, just make the run angles [-pi, pi] and the angle and distance ratios both 1.
+
+Data collection and analysis:
+	
+I didn’t write down what Tristan/Jack were already working on, and definitely missed a bunch, but things that were discussed include:
+->Maybe have a cutoff for a minimum number of steps, or a minimum distance from boundary achieved for an animal to be counted for any statistics other than “portion of animals that left really quickly”
+->Make max steps really high (like 1000)
+->Put some dots or circles where the mounds are on plots such as dung counts.
+	
+->Track total distance moved by each animal.'
+->Track total depletion of mounds.
+->Track average number of steps between mounds.
+->Track likelihood of finding a second patch if found a first patch.
+->Portion of time spent in fertile areas
+->Total time spent on landscape
+->Average distance from edge of nearest mound.
+
+
+
+
 **Tristan's Notes as of 4/19**
 Data export: The model now exports simulation data in .csv format. To keep this tidy, in the Data Export section, I generate a unique `run_ID`, create a new directory using `run_ID`, and save all the data there. The files are saved with their names' containing specific information about the number of animals, the number of steps, and the fertilizer pattern. For example:
 `uniform_200_300_dung_end.csv` is a uniform plot, 200 steps, 300 animals, containing the dung counts at the end of the simulation.

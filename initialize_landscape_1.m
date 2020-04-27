@@ -13,7 +13,7 @@ Note: x dimension refers to column, and y dimension to row. X dimension
 increases left to right, Y dimension top to bottom.
 %}
 
-function landscape = initialize_landscape_1(xdim, ydim, fertilizer_xy, max_grass, food_ratio)
+function landscape = initialize_landscape_1(xdim, ydim, fertilizer_xy, max_grass, food_ratio, mound_radius)
 %fertilizer_xy is a nx2 array of x-y points
 
 validateattributes(xdim,{'numeric'},{'integer', 'positive'});
@@ -36,6 +36,7 @@ init_nutrition_off = round(1 / food_ratio, 2);
 landscape = zeros(ydim, xdim, 3);
 %Z dimension will be 1-grass count 2-nutritional quality 3-poop count
 
+
 %Calculate distances from closest mound
 max_dist = round(sqrt(xdim^2 + ydim^2));
 for xx = 1:xdim
@@ -51,7 +52,7 @@ for xx = 1:xdim
                 landscape(yy, xx, 2) = dist_to_mound; 
             end
         end
-        if landscape(yy, xx, 1) < 3.5
+        if landscape(yy, xx, 1) < mound_radius
             %On mound
            landscape(yy, xx, 1) = max_grass;
            landscape(yy, xx, 2) = 1;

@@ -60,11 +60,17 @@ else
 
 %Get points in correct order and eliminate duplicate points
     if x_direction == 1
-        crossing_array = sortrows(crossing_array, 'ascend');
+        crossing_array_x = sort(crossing_array(:,1), 'ascend');
     else
-        crossing_array = sortrows(crossing_array, 'descend');
+        crossing_array_x = sort(crossing_array(:,1), 'descend');
     end
-
+    if y_direction == 1
+        crossing_array_y = sort(crossing_array(:,2), 'ascend');
+    else
+        crossing_array_y = sort(crossing_array(:,2), 'descend');
+    end
+    
+    crossing_array = [crossing_array_x, crossing_array_y];
     crossing_array = round(crossing_array, 2);
         %Rounding is to avoid small differences in calculating a duplicate
         %point in multiple ways from hiding that duplicate point.
