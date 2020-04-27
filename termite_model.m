@@ -25,7 +25,7 @@ Contents:
 
 %% SET USER-DEFINED PARAMETERS:
     % random, uniform, or neutral (no patches)? (string)
-    fertilizer_pattern = "uniform";
+    fertilizer_pattern = "random";
     % Number of animals to run? (integer)
     num_animals = 300;  %set number of animals to walk the Earth
     STRnum_animals = num2str(num_animals); % make a string version for data export
@@ -346,9 +346,9 @@ traj = reshape(trajectories, steps+1, 3, num_animals);
 % Initialize residency tracking matrix
 residency = zeros(num_animals, 2);
 
-for page = 1:size(traj, 3) % for every page in the 3d matrix
+for page = 1:size(traj, 3) % for every page [animal traj] in the 3d matrix
 
-    for line = 1:size(traj, 1) % for every line in the page
+    for line = 1:size(traj, 1) % for every line [coord pair] in the page
         x = traj(line, 1, page); % note the x coord
         y = traj(line, 2, page); % note the y coord
         if isnan(x) || isnan(y) % if the x or y coordinates are NaN
@@ -363,8 +363,14 @@ for page = 1:size(traj, 3) % for every page in the 3d matrix
     
 end
 
-for line = 1:size(residency,1)
-    residency(line, 1) = line;
+for line = 1:size(residency,1) % for each line in the residency file
+    residency(line, 1) = line; % write the animal_id
+end
+
+for line = 1:size(residency,1) % for each line in the residency file
+    % in the third column, note the run length of the animal in the third
+    % column.
+    residency(line, 3) = sum(~isnan(traj(:,1,line)));
 end
 
 %% Data Export
