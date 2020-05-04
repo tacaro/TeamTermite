@@ -5,7 +5,7 @@ function [fertilizer_xy] = random_fertilizer(fertilizer_xy, n_mounds2add, xdim, 
 %an existing array.
 n_mounds = size(fertilizer_xy);
 
-for build_mound = (n_mounds - (n_mounds2add - 1)) : n_mounds
+for build_mound = n_mounds + 1 : n_mounds + n_mounds2add
    overlaps = true;
    while overlaps %Will keep generating random xy points until one does not overlap.
         overlaps = false;

@@ -26,7 +26,7 @@ Contents:
 %% SET USER-DEFINED PARAMETERS:
     % random or uniform, (neutral)? (string)
     fertilizer_pattern = "uniform";
-    has_patches = false; %if false, landcape has same number of individual fertile grid squares, but arranged as single squares instead of in patches.
+    has_patches = false; %if true, landscape has patches of radius 3.5
     % Number of animals to run? (integer)
     num_animals = 300;  %set number of animals to walk the Earth
     STRnum_animals = num2str(num_animals); % make a string version for data export
@@ -34,6 +34,7 @@ Contents:
     steps = 200;
     STRsteps = num2str(steps); % make a string version for data export
     %Movement strategy options
+    %true true is Orit's model, false false is Dan's model.
     able2stop = true; %If true, animals will stop, feed, and end step if they cross a good patch.
     run4ever = false; %if true, there is no max distance traveled while running.
     random_walk = false; %if true, animals move in a true random walk. 
@@ -59,7 +60,8 @@ Contents:
 % Landscape parameters (dimension, # animals, mound placement) 
     xdim = 100;
     ydim = 100;
-    mound_radius = 3.5; % if change, need to change the "if ~has_patches block below"
+    mound_radius = 6.5; % if change, need to change the "if ~has_patches block below"
+    mound_area = 137;
 % N mounds need to be the same in both landscapes! 
     n_mounds_side = 5; %if regularly placed.
     n_mounds = n_mounds_side^2; % number of termite mounds if randomly placed
@@ -99,13 +101,33 @@ else
     food_ratio = 5;
 end
 %}
-    
+
+    %25 patches * 37 pixels/patch = 925 patch pixels.
+%{
+radius = 0.5, 1 pixel per mound.
+radius = 1.5, 9 pixels per mound
+2.5, 21
+ 3.5, 37
+  4.5, 69
+ 5.5, 97
+    6.5, 137
+    7.5, 177
+    8.5, 225
+    9.5, 293
+    10.5, 349
+    11.5, 421
+    12.5, 489
+    13.5, 577
+    14.5, 665
+    15.5, 749
+    16.5, 861
+%}
 if ~has_patches %No patches! individual fertile squares!
-    size_circle = 37; %hardcoded in for mound_radius 3.5
-    n_mounds = n_mounds*size_circle;
+    n_pixels = 925;
+    n_mounds = floor(n_pixels/mound_area);
+    n_pixels_extra = n_pixels - (n_mounds * mound_area);
     n_mounds_side = floor(sqrt(n_mounds));
     n_mounds_extra = n_mounds - n_mounds_side^2;
-    mound_radius = 0.5;
 else
     n_mounds_extra = 0;
 end  
