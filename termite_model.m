@@ -105,22 +105,9 @@ end
     %25 patches * 37 pixels/patch = 925 patch pixels.
 %{
 radius = 0.5, 1 pixel per mound.
-radius = 1.5, 9 pixels per mound
-2.5, 21
- 3.5, 37
-  4.5, 69
- 5.5, 97
-    6.5, 137
-    7.5, 177
-    8.5, 225
-    9.5, 293
-    10.5, 349
-    11.5, 421
-    12.5, 489
-    13.5, 577
-    14.5, 665
-    15.5, 749
-    16.5, 861
+1.5, 9; 2.5, 21; 3.5, 37; 4.5, 69; 5.5, 97; 6.5, 137
+ 7.5, 177; 8.5, 225; 9.5, 293; 10.5, 349; 11.5, 421; 12.5, 489; 13.5, 577
+14.5, 665; 15.5, 749; 16.5, 861
 %}
 if ~has_patches %No patches! individual fertile squares!
     n_pixels = 925;
@@ -150,30 +137,8 @@ elseif fertilizer_pattern == "random"
     fertilizer_xy = random_fertilizer(fertilizer_xy, n_mounds, xdim, ydim, boundary, mound_radius);
     landscape = initialize_landscape_1(xdim, ydim, fertilizer_xy, max_grass, food_ratio, mound_radius);
     landscape_before_run = landscape; % take snapshot of first frame for later reference
- %{
-elseif fertilizer_pattern == "random"
-    %random_fert = [randi([1 xdim],1,n_mounds) ; randi([1 ydim],1,n_mounds)];
-    %fertilizer_xy = transpose(random_fert);
-    %Above allows fertilizer patches outside the boundary.
-    fert_x = randi([(1+boundary), (xdim - boundary)], 1, n_mounds);
-    fert_y = randi([(1+boundary), (ydim - boundary)], 1, n_mounds);
-    fertilizer_xy = transpose( [fert_x; fert_y]);
-    landscape = initialize_landscape_1(xdim, ydim, fertilizer_xy, max_grass, food_ratio, mound_radius);
-    landscape_before_run = landscape; % take snapshot of first frame for later reference
-%}
-        %{
-elseif fertilizer_pattern == "neutral"
-    fert_x = linspace((boundary + 1), (xdim - boundary), n_mounds_side);
-    fert_y = linspace((boundary + 1), (ydim - boundary), n_mounds_side);
-    %fert_x(1) = [];, fert_x(end) = []; %Remove fertilizer right on edge
-    %fert_y(1) = [];, fert_y(end) = []; %Remove fertilizer right on edge
-    [X,Y] = meshgrid(fert_x, fert_y);
-    fertilizer_xy = round([X(:), Y(:)]);
-    landscape = initialize_landscape_1(xdim, ydim, fertilizer_xy, max_grass, food_ratio, mound_radius);
-    landscape_before_run = landscape; % take snapshot of first frame for later reference
-%}
 else
-    disp("Exception: Fertilizer pattern not recognized. The options are 'random', 'uniform', and 'neutral'.")
+    disp("Exception: Fertilizer pattern not recognized. The options are 'random' and 'uniform'")
     clearvars
     return
 end     
@@ -314,7 +279,16 @@ for animal = 1:num_animals
         time_until_leaving(animal) = steps;
     
     end
-
+    if sum(sum(landscape(:,:,1) >= 60)) <= (n_pixels / 2)
+        %Landscape depleted. End simulation.
+        landscape_over_time(:, :, (animal + 1) : num_animals) = []; 
+        trajectories(:, 3*(animal + 1) : 3*num_animals) = [];
+        time_until_leaving((animal + 1) : num_animals) = []; %record time animal exits
+        dist_to_closest_mound(:, (animal + 1) : num_animals) = [];
+        proximity_to_boundary(:, (animal + 1) : num_animals) = []; 
+        break
+    end
+        
 end
 
 
