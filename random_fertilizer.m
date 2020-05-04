@@ -3,7 +3,7 @@ function [fertilizer_xy] = random_fertilizer(fertilizer_xy, n_mounds2add, xdim, 
 %overlap if they are the center of circles of radius mound_radius.
 %Input an existing array so that additional random points can be added to
 %an existing array.
-n_mounds = size(fertilizer_xy);
+n_mounds = size(fertilizer_xy, 1);
 
 for build_mound = n_mounds + 1 : n_mounds + n_mounds2add
    overlaps = true;
