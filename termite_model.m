@@ -27,7 +27,7 @@ Contents:
     clearvars
     close all
     % random or uniform, (neutral)? (string)
-    fertilizer_pattern = "random";
+    fertilizer_pattern = "uniform";
     % Number of animals to run? (integer)
     num_animals = 1000;  %set number of animals to walk the Earth
     STRnum_animals = num2str(num_animals); % make a string version for data export
@@ -71,8 +71,8 @@ Contents:
 % Landscape parameters (dimension, # animals, mound placement) 
     xdim = 100;
     ydim = 100;
-    mound_radius = 0.5; % if change, need to change the "if ~has_patches block below"
-    mound_area = 1;
+    mound_radius = 3.5; % if change, need to change the "if ~has_patches block below"
+    mound_area = 37;
 % N mounds need to be the same in both landscapes! 
     n_mounds_side = 5; %if regularly placed.
     n_mounds = n_mounds_side^2; % number of termite mounds if randomly placed
@@ -152,7 +152,7 @@ end
     landscape_over_time = zeros(xdim, ydim, num_animals);
     dung_over_time = zeros(xdim, ydim, num_animals);
 
-
+%%
 %STEP 2: agents move through landscape.
 
 % Record trajectory of all animals. First three columns are first animal,
@@ -325,11 +325,13 @@ for animal = 1 : new_num_animals
 end
 
 counted_animals = new_num_animals - quick_departures; %will be saved in metadata
-animal_consumption = zeros(counted_animals);
-proximity2center = zeros(counted_animals);
+animal_consumption = zeros(counted_animals, 1);
+proximity2center = zeros(counted_animals, 1);
 for animal = 1:counted_animals
-    animal_consumption(animal) = sum(trajectories(:, 3 * animal));
-    dist2center = sqrt((50.5-trajectories(:, 3*animal-1)).^2 + (50.5-trajectories(:, 3*animal-1)).^2);
+    animal_consumption(animal) = nansum(trajectories(:, 3 * animal));
+    x_i = 3*animal-1;
+    y_i = 3*animal-2;
+    dist2center = sqrt((50-trajectories(:, x_i)).^2 + (50-trajectories(:, y_i)).^2);
     proximity2center(animal) = min(dist2center);
 end
 
