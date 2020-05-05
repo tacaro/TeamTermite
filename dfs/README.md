@@ -2,7 +2,9 @@
 
 | Name  | Description |
 | ------------- | ------------- |
-| ZP | uniform nutrients, static landscape  |
-| KA | random nutrients, static landscape  |
-| EV | uniform nutrients, degrading landscape|
-| XB |random nutrients, degrading landscape  |
+| static_neutral | landscape does not degrade, no patches |
+| static_random | landscape does not degrade, randomly distributed patches  |
+| static_uniform | landscape does not degrade, uniform patches|
+| degrades_neutral |landscape degrades, no patches  |
+| degrades_random |landscape degrades, randomly distributed patches  |
+| degrades_uniform |landscape degrades, uniform patches  |
