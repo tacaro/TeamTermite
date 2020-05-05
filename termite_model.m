@@ -164,8 +164,8 @@ trajectories = zeros(steps, 3*num_animals);
 time_until_leaving = zeros(num_animals,1); %record time animal exits
 dist_to_closest_mound = zeros(steps, num_animals);
 proximity_to_boundary = zeros(steps, num_animals); 
-fert_steps = zeros(num_animals);
-tumble_steps = zeros(num_animals);
+fert_steps = zeros(num_animals, 1);
+tumble_steps = zeros(num_animals, 1);
 
 curr_location = zeros(1,2);
 memory = zeros(1,3);
