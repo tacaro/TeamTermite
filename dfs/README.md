@@ -1,7 +1,8 @@
 # Dataframe directory
 
-zp: uniform nutrients, static landscape
-ka: random nutrients, static landscape
-
-ev: uniform nutrients, degrading landscape
-xb: random nutrients, degrading landscape
+| Name  | Description |
+| ------------- | ------------- |
+| ZP | uniform nutrients, static landscape  |
+| KA | random nutrients, static landscape  |
+| EV | uniform nutrients, degrading landscape|
+| XB |random nutrients, degrading landscape  |
