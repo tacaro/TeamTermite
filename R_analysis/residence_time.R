@@ -1,31 +1,233 @@
 # Analysis of agent residence time in either high or low nutrient patches
+# Tristan Caro - May 2020
 
 # The tidyverse package is required
 require(tidyverse)
+require(magrittr)
+require(viridis)
 
 # Import data as .csv
 # EDIT this as necessary to read in the correct files
-randomdf <- as_tibble(read.csv('/Users/Tristan/TeamTermite/dfs/random_200_300_residency.csv'))
-uniformdf <- as_tibble(read.csv('/Users/Tristan/TeamTermite/dfs/uniform_200_300_residency.csv'))
+randomdf <- as_tibble(read.csv('/Users/Tristan/TeamTermite/dfs/202054102932ka/random_200_10000_residency.csv'))
+uniformdf <- as_tibble(read.csv('/Users/Tristan/TeamTermite/dfs/202054102850zp/uniform_200_10000_residency.csv'))
+degrandomdf <- as_tibble(read.csv('/Users/Tristan/TeamTermite/dfs/20205410314xb/random_200_10000_residency.csv'))
+deguniformdf <- as_tibble(read.csv('/Users/Tristan/TeamTermite/dfs/202054103029ev/uniform_200_10000_residency.csv'))
 
-randomdf <- randomdf %>%
-  select(time_in_high_nutrient = colnames(randomdf[2])) %>% # rename the time column
-  mutate(plot_type = "random")
+random_food_static <- as_tibble(read.csv('/Users/Tristan/TeamTermite/dfs/202054102932ka/random_200_10000_mean_food_over_time.csv'))
+uniform_food_static <- as_tibble(read.csv('/Users/Tristan/TeamTermite/dfs/202054102850zp/uniform_200_10000_mean_food_over_time.csv'))
+random_food_deg <- as_tibble(read.csv('/Users/Tristan/TeamTermite/dfs/20205410314xb/random_200_10000_mean_food_over_time.csv'))
+uniform_food_deg <- as_tibble(read.csv('/Users/Tristan/TeamTermite/dfs/202054103029ev/uniform_200_10000_mean_food_over_time.csv'))
 
-uniformdf <- uniformdf %>%
-  select(time_in_high_nutrient = colnames(uniformdf)[2]) %>% # rename the time column
+
+# Clean up the data frames, rename the columns to something sensible
+randomdf %<>%
+  select(animal = colnames(randomdf[1]),
+        time_in_high_nutrient = colnames(randomdf[2]),
+        run_length = colnames(randomdf[3])) %>% 
+  mutate(plot_type = "random") # note the landscape type
+
+uniformdf %<>%
+  select(animal = colnames(uniformdf[1]),
+        time_in_high_nutrient = colnames(uniformdf[2]),
+        run_length = colnames(uniformdf[3])) %>% 
   mutate(plot_type = "uniform")
 
-combined <- full_join(randomdf, uniformdf) # join the two dataframes
+degrandomdf %<>%
+  select(animal = colnames(degrandomdf[1]),
+         time_in_high_nutrient = colnames(degrandomdf[2]),
+         run_length = colnames(degrandomdf[3])) %>% 
+  mutate(plot_type = "random") # note the landscape type
+
+deguniformdf %<>%
+  select(animal = colnames(deguniformdf[1]),
+         time_in_high_nutrient = colnames(deguniformdf[2]),
+         run_length = colnames(deguniformdf[3])) %>% 
+  mutate(plot_type = "uniform") # note the landscape type
+
+random_food_static %<>%
+  select(animal = colnames(random_food_static[1]),
+         avg_food = colnames(random_food_static[2])) %>%
+  mutate(plot_type = "random")
+
+random_food_deg %<>%
+  select(animal = colnames(random_food_deg[1]),
+         avg_food = colnames(random_food_deg[2])) %>%
+  mutate(plot_type = "random")
+
+uniform_food_static %<>%
+  select(animal = colnames(uniform_food_static[1]),
+         avg_food = colnames(uniform_food_static[2])) %>%
+  mutate(plot_type = "uniform")
+
+uniform_food_deg %<>%
+  select(animal = colnames(uniform_food_deg[1]),
+         avg_food = colnames(uniform_food_deg[2])) %>%
+  mutate(plot_type = "uniform")
+
+# Join the dataframes
+# Make a new dataframe called 'combined' which has data from the static landscape
+combined <- full_join(randomdf, uniformdf)
+# Make a new dataframe called 'combined_dyn' which has data from the landscape that is degraded over time
+combined_dyn <- full_join(degrandomdf, deguniformdf)
+
+combined_food_static <- full_join(uniform_food_static, random_food_static)
+combined_food_dyn <- full_join(uniform_food_deg, random_food_deg)
+# Add a new column to normalize high_nutrient time to total run length
+combined %<>% mutate(proportion_residence = time_in_high_nutrient/run_length)
+combined_dyn %<>% mutate(proportion_residence = time_in_high_nutrient/run_length)
+
+# Add the food columns
+combined <- full_join(combined, combined_food_static)
+combined_dyn <- full_join(combined_dyn, combined_food_dyn)
+
+
+combined %>% 
+  group_by(plot_type) %>%
+  summarize(total_run_time = sum(run_length)) %>%
+  ggplot(aes(x = plot_type, y = total_run_time)) +
+  geom_bar(stat = 'identity')
+  
+
+
+
+# Let's plot a histogram of run length to see where we should cutoff the data (rarefication)
+# Do the distributions look different between landscape types?
+# Can use vertical line feature to visualize cutoff
+run_length_hist <- ggplot(combined, aes(run_length, fill = plot_type)) +
+  geom_histogram() +
+  geom_vline(xintercept = 20, color = "red") +
+  facet_wrap(~plot_type) +
+  ggtitle("Distribution of run_lengths") +
+  scale_color_viridis(discrete=TRUE) +
+  theme_bw()
+run_length_hist
+  # for this example, I am cutting off at run lengths of 25
+
+# We can also zoom in on the distribution tails
+run_len_hist_zoomed <- run_length_hist +
+  coord_cartesian(ylim = c(0,200))
+run_len_hist_zoomed
+
+run_len_violin <- ggplot(combined, aes(x = plot_type, y = run_length, fill = plot_type)) +
+  geom_violin() +
+  ggtitle("How long spent in sim comparison")
+run_len_violin
+
+# !
+# Trim at the threshold you choose. In this case, 14.
+combined_trimmed <- combined %>% 
+  filter(run_length > 20)
+
+# Let's make some plots!
+food_over_time_deg <- ggplot(combined_food_dyn, aes(x = animal, y = avg_food, color=plot_type)) +
+  geom_line() +
+  xlab('Animal #') +
+  ylab('Average Food in Landscape') +
+  ggtitle('Food availability over time') +
+  coord_cartesian(ylim=c(0,29)) +
+  theme_classic()
+food_over_time_deg
+
+food_over_time_static <- ggplot(combined_food_static, aes(x = animal, y = avg_food, color=plot_type)) +
+  geom_line() +
+  xlab('Animal #') +
+  ylab('Average Food in Landscape') +
+  ggtitle('Food availability over time (no eating allowed)') +
+  coord_cartesian(ylim=c(0,29)) +
+  theme_classic()
+food_over_time_static
+
+food_vs_run_length <- ggplot(combined_dyn, aes(x = avg_food, y = run_length, color = plot_type)) +
+  geom_smooth(method = lm) +
+  scale_x_reverse() +
+  xlab("Average food availability") +
+  ylab("Ticks") +
+  ggtitle("Time animal spends in sim vs food availability") +
+  geom_vline(xintercept = 20, color = "red") +
+  theme_classic()
+food_vs_run_length
+  
+
+boxplot_trimmed <- ggplot(combined_trimmed, aes(x = plot_type, y = time_in_high_nutrient, color = plot_type)) +
+  geom_boxplot(outlier.size=0.03, outlier.stroke=0.1) +
+  geom_jitter(shape = 16, size=0.25, position = position_jitter(0.3)) +
+  ylab('Time spent in high nutrient (ticks)') +
+  xlab('Landscape type') +
+  ggtitle('Total Time Spent in High Nutrient Zone') +
+  theme_classic()
+boxplot_trimmed
+
+violin_trimmed <- ggplot(combined_trimmed, aes(x = plot_type, y = time_in_high_nutrient, fill = plot_type)) +
+  geom_violin() +
+  #geom_jitter(shape = 16, position = position_jitter(0.2)) +
+  ylab('Time spent in high nutrient (ticks)') +
+  xlab('Landscape type') +
+  ggtitle('Total Time Spent in High Nutrient Zone') +
+  theme_classic()
+violin_trimmed
+
+boxplot_trimmed_proportion <- ggplot(combined_trimmed, aes(x = plot_type, y = proportion_residence, color = plot_type)) +
+  geom_boxplot(outlier.size=0.03, outlier.stroke=0.1) +
+  geom_jitter(shape = 16, size=0.25, position = position_jitter(0.3)) +
+  ylab('Proportion of total run spent in high nutrient zone') +
+  xlab('Landscape type') +
+  ggtitle('Ratio of Time Spent in High Nutrient Zone to Total Run Time') +
+  theme_classic()
+boxplot_trimmed_proportion
+
+violin_trimmed_proportion <- ggplot(combined_trimmed, aes(x = plot_type, y = proportion_residence, fill = plot_type)) +
+  geom_violin() +
+  #geom_jitter(shape = 16, position = position_jitter(0.2)) +
+  ylab('Proportion of total run spent in high nutrient zone') +
+  xlab('Landscape type') +
+  ggtitle('Ratio of Time Spent in High Nutrient Zone to Total Run Time') +
+  theme_classic()
+violin_trimmed_proportion
+
+
+
+# Output plots
+ggsave(plot = run_length_hist, 'run_length_hist.png')
+ggsave(plot = boxplot_trimmed, 'boxplot_trimmed_abs.png')
+ggsave(plot = boxplot_trimmed_proportion, 'boxplot_trimmed_prop.png')
+ggsave(plot = run_len_hist_zoomed, 'run_len_hist_zoomed.png')
+ggsave(plot = run_len_violin, 'run_len_violin.png')
+ggsave(plot = violin_trimmed_proportion, 'violin_trimmed_proportion.png')
+ggsave(plot = food_vs_run_length, 'food_vs_run_len.png')
+
+
+
+
+### Legacy code
+
+run_len_vs_food <- ggplot(data=combined_food_dyn, aes(x = animal, y = avg_food, color = plot_type)) +
+  geom_line() +
+  geom_smooth(data = combined, aes(x = animal, y = run_length, color = plot_type)) +
+  scale_y_continuous(name="Average food", sec.axis = sec_axis(~., name="Run length")) +
+  ggtitle('Food availability vs run length') +
+  theme_classic()
+run_len_vs_food
+
+
 
 boxplot <- ggplot(combined, aes(x = plot_type, y = time_in_high_nutrient, color = plot_type)) +
   geom_boxplot() +
   geom_jitter(shape = 16, position = position_jitter(0.2)) +
   ylab('Time spent in high nutrient (ticks)') +
   xlab('Landscape type') +
+  ggtitle('Total Time Spent in High Nutrient Zone') +
   theme_classic()
-ggsave('residency_boxplot.png')
+boxplot
+#ggsave('residency_boxplot.png')
 
+
+boxplot_proportional <- ggplot(combined, aes(x = plot_type, y = proportion_residence, color = plot_type)) +
+  geom_boxplot() +
+  geom_jitter(shape = 16, position = position_jitter(0.2)) +
+  ylab('Proportion of total run spent in high nutrient zone') +
+  xlab('Landscape type') +
+  ggtitle('Absolute residence counts') +
+  theme_classic()
 
 # What if we remove all the zero values? This means we do not consider animals that spent no time in the nutrient
 # i.e. for animals that did interact with nutrient, which pattern held them the longest?
@@ -33,11 +235,17 @@ ggsave('residency_boxplot.png')
 combined_no_zero <- combined %>% 
   filter(time_in_high_nutrient != 0) # filter out zero values
 
+
+
+
 boxplot_no_zero <- ggplot(combined_no_zero, aes(x = plot_type, y = time_in_high_nutrient, color = plot_type)) +
   geom_boxplot() +
   geom_jitter(shape = 16, position = position_jitter(0.2)) +
   ylab('Time spent in high nutrient (ticks)') +
   xlab('Landscape type') +
+  ggtitle('Absolute residence, zero values subtracted') +
   theme_classic()
-ggsave('residency_boxplot_no_zero.png')
+#ggsave('residency_boxplot_no_zero.png')
   
+
+
