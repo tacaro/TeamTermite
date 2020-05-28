@@ -13,7 +13,7 @@ Note: x dimension refers to column, and y dimension to row. X dimension
 increases left to right, Y dimension top to bottom.
 %}
 
-%{ 
+%{
 Contents:
      - Set User-Defined Parameters
      - Model Script
@@ -40,6 +40,7 @@ Contents:
     able2stop = true; %If true, animals will stop, feed, and end step if they cross a good patch.
     run4ever = false; %if true, there is no max distance traveled while running.
     random_walk = false; %if true, animals move in a true random walk.
+
     if able2stop
         STRable2stop = "able2stop";
     else
@@ -50,9 +51,7 @@ Contents:
     else
         STRrun4ever = "runhasmax";
     end
-    
-    
-    
+
 
 %% Model Script
 % Model parameters
@@ -61,9 +60,10 @@ Contents:
     max_feed = 5; %max amount can feed per turn
     energy_spent = 3; %fullness lost per turn
 
-% Landscape parameters (dimension, # animals, mound placement) 
+% Landscape parameters (dimension, # animals, mound placement)
     xdim = 100;
     ydim = 100;
+
     mound_area_Map = containers.Map({0.5, 1.5, 2.5, 3.5, 4.5, 5.5},...
         {1, 9, 21, 37, 69, 97}); %hardcoded from looking at landscapes
     mound_area = values(mound_area_Map, {mound_radius});
@@ -74,7 +74,7 @@ Contents:
     n_mounds = n_mounds_side^2; % number of termite mounds if randomly placed
     max_grass = 100; %starting grass/nutrition level for fertilizer patches
     food_ratio = 5; %ratio of initial grass quantity and nutrition on fertilizered patches vs off
-    
+
 % Movement angle/dist parameters
     max_turn_angle = pi;
     angle_ratio = 3; %How much less max turn angle is for run than tumble.
@@ -98,7 +98,7 @@ Contents:
 % Parameters for decision-making
     stay_grass = 30;
     stay_nutrition = 5;
-    run_nutrition = 3; 
+    run_nutrition = 3;
     stop_food = 0.8;
 
 %Allow for different sized patches.
@@ -108,21 +108,24 @@ n_pixels_extra = n_pixels - (n_mounds * mound_area);
 n_mounds_side = floor(sqrt(n_mounds));
 n_mounds_extra = n_mounds - n_mounds_side^2; 
 
+
 % Set up fertilizer mound locations, initialize landscape
-if fertilizer_pattern == "uniform" 
+if fertilizer_pattern == "uniform"
     fert_x = linspace((boundary + 1 + floor(mound_radius)), (xdim - boundary - floor(mound_radius)), n_mounds_side);
     fert_y = linspace((boundary + 1 + floor(mound_radius)), (ydim - boundary - floor(mound_radius)), n_mounds_side);
     [X,Y] = meshgrid(fert_x, fert_y);
     fertilizer_xy = round([X(:), Y(:)]);
     if n_mounds_extra ~= 0  %The circles do not contain a perfect square number of gridspaces, so randomly assign remainder.
-        fertilizer_xy = random_fertilizer(fertilizer_xy, n_mounds_extra, xdim, ydim, boundary, mound_radius);    
+        fertilizer_xy = random_fertilizer(fertilizer_xy, n_mounds_extra, xdim, ydim, boundary, mound_radius);
     end
     
     landscape = initialize_landscape_1(xdim, ydim, fertilizer_xy, max_grass, food_ratio, mound_radius);
+
     if n_pixels_extra ~= 0
         landscape = add_fertile_pixels(landscape, n_pixels_extra, boundary, max_grass);
     end
     landscape_before_run = landscape; % take snapshot of first frame for later reference 
+
 elseif fertilizer_pattern == "random"
     fertilizer_xy = [];
     fertilizer_xy = random_fertilizer(fertilizer_xy, n_mounds, xdim, ydim, boundary, mound_radius);
@@ -142,8 +145,8 @@ if sum(sum(landscape(:,:,2) == 1)) ~= 925
 end
 
 % Preallocate dataframe to track landscape over time
-    landscape_over_time = zeros(xdim, ydim, steps);
-    dung_over_time = zeros(xdim, ydim, steps);
+landscape_over_time = zeros(xdim, ydim, steps);
+dung_over_time = zeros(xdim, ydim, steps);
 
 %%
 %STEP 2: agents move through landscape.
@@ -152,7 +155,7 @@ end
 % fourth through sixth columns are second animal, etc. x, y coords then
 % food consumed at that step.
 
-% Trajectories are saved as xpos, ypos, and fullness for each agent. 
+% Trajectories are saved as xpos, ypos, and fullness for each agent.
 trajectories = zeros(steps, 3*num_animals);
 time_until_leaving = zeros(num_animals,1); %record time animal exits
 dist_to_closest_mound = zeros(steps, num_animals);
@@ -167,21 +170,21 @@ for animal = 1:num_animals
     % Take snapshot of landscape, append to landscape_over_time
     landscape_over_time(:, :, animal) = landscape(:,:,1);
     dung_over_time(:,:,animal) = landscape(:,:,3);
-    
+
     % Movement loop
     animal_x = 3*animal - 2;%These are for indexing trajectories array
     animal_y = animal_x + 1;
     animal_z = animal_x + 2;
-    
-    % Random starting position on perimeter of landscape: 
-    % Pick x or y to start on, other var is 1 or max. 
+
+    % Random starting position on perimeter of landscape:
+    % Pick x or y to start on, other var is 1 or max.
     A = [1+boundary, xdim-boundary];
     astart = A(randi(length(A), 1));
     %bstart = (randi(xdim, 1)); %%%I think this allows a coordinate outside the boundary?
     bstart = boundary + randi(xdim - 2*boundary);
-    starting_pos = [astart,bstart ; bstart,astart ]; 
+    starting_pos = [astart,bstart ; bstart,astart ];
     start_pos = starting_pos(:,randi(2,1));
-   
+
     % Set starting directions.
     if start_pos(1) == 1+boundary
         direction = (-pi/2) + (pi*rand);
@@ -195,17 +198,17 @@ for animal = 1:num_animals
         disp("Something is wrong with starting direction, exiting script!");
         return
     end
-    
-    trajectories(1, animal_x : animal_y) = [start_pos]; 
+
+    trajectories(1, animal_x : animal_y) = [start_pos];
     %initialize. Goes to 1 when animal leaves boundary on landscape.
     leave = 0;
     memory(:) = 0;
     %memory(1) is most recent, (3) least recent.
-    
+
     %landscape_over_time = landscape_over_time(:,:,landscape(:,:,1);
-    
+
     for t=1:steps
-        
+
         curr_location = trajectories(t, animal_x : animal_y);
         x1 = curr_location(1);
         y1 = curr_location(2);
@@ -213,34 +216,36 @@ for animal = 1:num_animals
         food_here = round(grass_quantity * nutrition * max_feed / max_grass, 1);
 
 % Decide on movement strategy and calculate next location
-      
-            % Choose turn size & movement distance 
+
+            % Choose turn size & movement distance
             % Could try making tumble just pi + run angles
             % for now, decision to run vs tumble both a fct of food here and
-            % recent memory. 
+            % recent memory.
             recent_memory = mean(memory);
-            
-            
+
+
             % ** this is where the run vs tumble decision is finally made,
             % and also where it probably makes sense to try to get a sense
-            % for what seems reasonable. 
+            % for what seems reasonable.
             if food_here > 3 || recent_memory > 0.3 % TUMBLE
+
                 turning_angle = unifrnd(-max_turn_angle, max_turn_angle); 
                 d = unifrnd(min_tumb, max_tumb); 
                 tumble_steps(animal) = tumble_steps(animal) + 1;
             else % RUN 
+
                 turning_angle = unifrnd(-max_turn_angle/angle_ratio, max_turn_angle/angle_ratio);
-                d = unifrnd(min_run, max_run); 
-            end 
-            
-            direction = rem(direction + turning_angle, (2*pi)); % Take remainder so always between [-2*pi, 2*pi] 
-          
-            
-            % Agent moves 
+                d = unifrnd(min_run, max_run);
+            end
+
+            direction = rem(direction + turning_angle, (2*pi)); % Take remainder so always between [-2*pi, 2*pi]
+
+
+            % Agent moves
             x2 = x1+d*cos(direction);
             y2 = y1+d*sin(direction);
-            
-   
+
+
 
         % Update landscape and trajectories array
         % returned x2 and y2 will be different from inputs if animal crossed
@@ -255,288 +260,121 @@ for animal = 1:num_animals
             break
             % Ends "t" loop. returns to "animal" loop.
         end
-        
+
         % Animals consume more food if quality is higher
-        food_consumed = grass_consumed * nutrition; 
-        trajectories(t+1, animal_x : animal_y) = [x2, y2]; %update location
-        trajectories(t+1, animal_z) = food_consumed;
-        memory(3) = memory(2); memory(2) = memory(1); memory(1) = food_consumed;
-        if nutrition == 1
-            fert_steps(animal) = fert_steps(animal) + 1;
-        end
+
         
        
         % Calculate distance to nearest mound  
         
-        if false
+        food_consumed = grass_consumed * nutrition;
+
+        trajectories(t+1, animal_x : animal_y) = [x2, y2]; %update location
+        trajectories(t+1, animal_z) = food_consumed;
+        memory(3) = memory(2);, memory(2) = memory(1);, memory(1) = food_consumed;
+
+
+        % Calculate distance to nearest mound
+        if mound_radius > 1 %can take a long time to compute
             mound_dists = zeros(n_mounds,1);
-            for m = 1:n_mounds 
+            for m = 1:n_mounds
                 mound = fertilizer_xy(m,:);
                 pts = [mound; x2,y2];
                 mound_dists(m) = pdist(pts, 'euclidean');
-            end 
+            end
 
             dist_to_closest_mound(t, animal) = min(mound_dists);
         end
         %}
         % Calculate distance to nearest boundary
-        dist_to_boundary = [x2; xdim - x2; y2; ydim - y2] - boundary; 
+        dist_to_boundary = [x2; xdim - x2; y2; ydim - y2] - boundary;
         proximity_to_boundary(t, animal) = min(dist_to_boundary);
         time_until_leaving(animal) = steps;
-    
-    end
- %{
-    if sum(sum(landscape(:,:,1) >= 60)) <= (n_pixels / 2)
-        %Landscape depleted. End simulation.
-        landscape_over_time(:, :, (animal + 1) : num_animals) = [];
-        dung_over_time(:, :, (animal + 1) : num_animals) = []; 
-        trajectories(:, 3*(animal + 1) : 3*num_animals) = [];
-        time_until_leaving((animal + 1) : num_animals) = [];
-        dist_to_closest_mound(:, (animal + 1) : num_animals) = [];
-        proximity_to_boundary(:, (animal + 1) : num_animals) = []; 
-        fert_steps((animal + 1) : num_animals) = [];
-        tumble_steps((animal + 1) : num_animals) = [];
-        break
-    end
-   %}     
-end
 
-%% MAKING MOVIES
-
-cmap_grass = zeros(100,3); %Create greenscale colormap
-cmap_grass(:,2) = [1:100]/100;
-cmap_dung = zeros(100,3); %Create cyan colormap
-cmap_dung(:, 2) = [1:100]/200;
-cmap_dung(:, 3) = [1:100]/200;
-
-
-clear grass_movie
-grass_movie(num_animals) = struct('cdata',[],'colormap',[]);
-clear dung_movie
-dung_movie(num_animals) = struct('cdata',[],'colormap',[]);
-
-Xtraj = zeros(steps, 1);
-Ytraj = zeros(steps, 1);
-xlim = [1, 100];
-ylim = [1, 100];
-max_dung = max(max(dung_over_time(:,:,num_animals)))
-
-for animal_i  = 1 : num_animals
-    animal_i
-    close all
-%Trajectory of this animal
- %   for tt = 0:9
-  %      Xtraj(:, tt+1) = trajectories(1:steps, 3*(10*animal_i-tt)-2);
-   %     Ytraj(:, tt+1) = trajectories(1:steps, 3*(10*animal_i-tt)-1);
-    %end
-    %Xtraj = Xtraj(~isnan(Xtraj));
-    %Ytraj = Ytraj(~isnan(Ytraj)):
-    
-    
-    im_grass = figure('Visible', false);
-    figure(im_grass);
-    imagesc(landscape_over_time(:,:,animal_i), [0, 100]);
-    hold on
-    colormap(parula);
-    colorbar;
-    title('Grass Quantity', 'FontSize', 24);
-    %plot(Ytraj, Xtraj, 'LineWidth', 3, 'Color', 'm')
-    hold off
-
-    im_dung = figure('Visible', false);
-    figure(im_dung);
-    imagesc(dung_over_time(:,:,animal_i), [0, max_dung]);
-    hold on
-    colormap(parula);
-    colorbar;
-    title('Dung Quantity', 'FontSize', 24);
-    %plot(Ytraj, Xtraj, 'LineWidth', 3, 'Color', 'm')
-    hold off
-
-    grass_movie(animal_i) = getframe(im_grass);
-    dung_movie(animal_i) = getframe(im_dung);
-
-end
-
-
-%{
-clear grass_movie
-grass_movie(steps) = struct('cdata',[],'colormap',[]);
-clear dung_movie
-dung_movie(steps) = struct('cdata',[],'colormap',[]);
-
-Xtraj = trajectories(:,1);
-Ytraj = trajectories(:,2);
-Xtraj = Xtraj(~isnan(Xtraj));
-Ytraj = Ytraj(~isnan(Ytraj));
-max_dung = max(max(max(dung_over_time)));
-Xmax = ceil(max(Xtraj));
-Xmin = floor(min(Xtraj));
-Ymax = ceil(max(Ytraj));
-Ymin = floor(min(Ytraj));
-
-for step  = 1 %: (size(Xtraj, 1) - 1)
-
-    close all
-%Trajectory of this animal
-    Xstep = Xtraj(step:step+1) - Xmin;
-    Ystep = Ytraj(step:step+1) - Ymin;
-    
-    im_grass = figure('visible', 'off');
-    figure(im_grass)
-    imagesc(landscape_over_time(Ymin:Ymax ,Xmin:Xmax ,step), [0, 100]);
-    hold on
-    colormap(cmap_grass)
-    colorbar
-    title('Grass Quantity');
-    plot(Xstep, Ystep, 'LineWidth', 3, 'Color', 'm')
-    hold off
-
-    im_dung = figure('visible', 'off');
-    figure(im_dung)
-    imagesc(dung_over_time(Ymin:Ymax ,Xmin:Xmax ,step), [0, max_dung*2]);
-    hold on
-    colormap(cmap_dung)
-    colorbar
-    title('Dung Quantity');
-    plot(Ystep, Xstep, 'LineWidth', 3, 'Color', 'm')
-    hold off
-pause(2);
-    grass_movie(step) = getframe(im_grass);
-    dung_movie(step) = getframe(im_dung);
-
-end
-%}
-
-
-
-v_grass = VideoWriter([num2str(fertilizer_pattern),'_','Animals',...
-    num2str(num_animals),'Steps',num2str(steps),'Dim',num2str(xdim),...
-    'grass2.mp4'],'MPEG-4');
-v_grass.FrameRate = 24;
-open(v_grass);
-writeVideo(v_grass, grass_movie);
-close(v_grass);
-
-v_dung = VideoWriter([num2str(fertilizer_pattern),'_','Animals',...
-    num2str(num_animals),'Steps',num2str(steps),'Dim',num2str(xdim),...
-    'dung2.mp4'],'MPEG-4');
-v_dung.FrameRate = 24;
-open(v_dung);
-writeVideo(v_dung, dung_movie);
-close(v_dung);
-
-
-%% Liam Data collection
-
-%for loop counts and removes animals not in landscape for at least 5.
-quick_departures = 0; %will be saved in metadata
-new_num_animals = size(time_until_leaving, 1);
-for animal = 1 : new_num_animals
-    animal_i = (new_num_animals + 1 - animal);
-    traj_i = 3 * animal_i;
-    if time_until_leaving(animal_i) < 5
-        quick_departures = quick_departures + 1;
-        trajectories(:, (traj_i - 2) : traj_i) = [];
-        time_until_leaving(animal_i) = []; 
-        fert_steps(animal_i) = [];
-        tumble_steps(animal_i) = [];
-    end
-end
-
-counted_animals = new_num_animals - quick_departures; %will be saved in metadata
-animal_consumption = zeros(counted_animals, 1);
-proximity2center = zeros(counted_animals, 1);
-for animal = 1:counted_animals
-    animal_consumption(animal) = nansum(trajectories(:, 3 * animal));
-    x_i = 3*animal-1;
-    y_i = 3*animal-2;
-    dist2center = sqrt((50-trajectories(:, x_i)).^2 + (50-trajectories(:, y_i)).^2);
-    proximity2center(animal) = min(dist2center);
+    end  
 end
 
 
 
 %% Visualization
 
-%{
 % Time spent on landscape
-    hist(time_until_leaving,counted_animals/5)
+    hist(time_until_leaving,num_animals/5)
     title('time steps spent in simluation')
 
 
-% Plot fullness through time for each animal 
+% Plot fullness through time for each animal
     hold on
-    for animal = 1:counted_animals
+    for animal = 1:num_animals
         fullness_level = trajectories(:,3*animal);
         t_spent = time_until_leaving(animal);
         plot(1:t_spent, fullness_level(1:t_spent));
-    end 
+    end
     xlim([1 steps])
     ylim([1 max_feed+2])
     title('fullness through time ');
-    hold off 
+    hold off
 
 % Distance to nearest boundary.
-    figure
-    hold on 
-    for animal = 1:counted_animals
+%{    figure
+    hold on
+    for animal = 1:num_animals
         plot(1:steps, proximity_to_boundary(:, animal))
 
-    end 
+    end
     title('distance to boundary thru time')
-    hold off 
-
+    hold off
+%}
 % Plot distance to mound center through time for each animal
     figure
-    hold on 
-    for animal = 1:counted_animals
+    hold on
+    for animal = 1:num_animals
         plot(1:steps, dist_to_closest_mound(:, animal))
 
-    end 
+    end
     title('distance to closest mound thru time')
-    hold off 
-%}
+    hold off
+
 % Quantity Plot
     figure, surf(landscape(:,:,1));
-    hold on 
+    hold on
     zz =transpose(linspace(100,100,length(trajectories(:,2))));
-    for animal = 1:counted_animals
+    for animal = 1:num_animals
         xx = 3*animal - 2;
         yy = xx + 1;
         plot3(trajectories(:,xx,1), trajectories(:,yy,1),zz)
-    end 
+    end
     title('ending landscape grass quantity values');
     hold off
 
-% Nutrition Plot 
+% Nutrition Plot
     figure, surf(landscape(:,:,2));
     hold on
     zz =transpose(linspace(100,100,length(trajectories(:,2))));
-    for animal = 1:counted_animals
+    for animal = 1:num_animals
         xx = 3*animal - 2;
         yy = xx + 1;
         plot3(trajectories(:,xx,1), trajectories(:,yy,1),zz)
-    end 
+    end
     title('ending landscape nutrition values');
     hold off
 
 
-% Dung Plot 
+% Dung Plot
     surf(landscape(:, :, 3));zz =transpose(linspace(100,100,length(trajectories(:,2))));
     hold on
-    for animal = 1:counted_animals
+    for animal = 1:num_animals
         xx = 3*animal - 2;
         yy = xx + 1;
         plot3(trajectories(:,xx,1), trajectories(:,yy,1),zz)
-    end 
+    end
     title('dung location pileups');
-    hold off 
-    
-    
-    
+    hold off
+
+
+
 %% Residency File Creation
-%{
+
 landscape_time_bi = landscape_over_time;
 landscape_time_bi=landscape_time_bi > 50;
 
@@ -548,9 +386,9 @@ traj = reshape(trajectories, steps+1, 3, num_animals);
 % Initialize residency tracking matrix
 residency = zeros(num_animals, 2);
 
-for page = 1:size(traj, 3) % for every page in the 3d matrix
+for page = 1:size(traj, 3) % for every page [animal traj] in the 3d matrix
 
-    for line = 1:size(traj, 1) % for every line in the page
+    for line = 1:size(traj, 1) % for every line [coord pair] in the page
         x = traj(line, 1, page); % note the x coord
         y = traj(line, 2, page); % note the y coord
         if isnan(x) || isnan(y) % if the x or y coordinates are NaN
@@ -562,13 +400,19 @@ for page = 1:size(traj, 3) % for every page in the 3d matrix
            %residency(page, 2) = residency(page, 2) + 0; % add zero the the value
         end
     end
-    
+
 end
 
-for line = 1:size(residency,1)
-    residency(line, 1) = line;
+for line = 1:size(residency,1) % for each line in the residency file
+    residency(line, 1) = line; % write the animal_id
 end
-%}
+
+for line = 1:size(residency,1) % for each line in the residency file
+    % in the third column, note the run length of the animal in the third
+    % column.
+    residency(line, 3) = sum(~isnan(traj(:,1,line)));
+end
+
 %% Data Export
 % Create a hash key that is unique to this simulation run
 % The key is current datetime + two random AZ characters
@@ -577,10 +421,10 @@ now = now(~isspace(now));
 run_ID = strcat(now, randsample(char(97:122), 2));
 mkdir(['dfs/' run_ID]);
 
-STRmound_radius = num2str(mound_radius);
+
 % Create a "basename" so that all exported csvs share a common format, in
 % the same folder. 'dfs/' folder is required to exist.
-basename = strcat('dfs/', run_ID, "/", fertilizer_pattern, "_", "radius", STRmound_radius, "_", STRrun4ever, "_", STRable2stop);
+basename = strcat('dfs/', run_ID, "/", fertilizer_pattern, "_", STRsteps, "_", STRnum_animals, "_");
 
 % Output metadata file
     % Create a cell array containing useful simulation parameters
@@ -601,8 +445,6 @@ basename = strcat('dfs/', run_ID, "/", fertilizer_pattern, "_", "radius", STRmou
             'stay_nutrition', stay_nutrition;
             'run_nutrition', run_nutrition;
             'stop_food', stop_food;
-            'quick_departures', quick_departures;
-            'counted_animals', counted_animals;
             };
       MTDA = cell2table(MTDA, 'VariableNames', {'Parameter', 'Value'});
       writetable(MTDA, strcat(basename, 'metadata.csv'));
@@ -610,27 +452,21 @@ basename = strcat('dfs/', run_ID, "/", fertilizer_pattern, "_", "radius", STRmou
 % Output .csv files
     disp("Saving files . . .")
     disp(strcat("This run's identifier is:", run_ID));
-    %writematrix(residency, strcat(basename, 'residency.csv')); % residency time, in ticks
-    %writematrix(trajectories, strcat(basename, 'trajectories.csv')); % trajectories
-   % writematrix(landscape(:,:,1), strcat(basename, 'quantity_end.csv')); % quantity
-    %writematrix(landscape(:,:,2), strcat(basename, 'nutrition_end.csv')); % nutrition
-    %writematrix(landscape(:,:,3), strcat(basename, 'dung_end.csv')); % dung
-    %writematrix(landscape_before_run(:,:,1), strcat(basename, 'quantity_start.csv')); % quantity at start
-    %writematrix(landscape_before_run(:,:,2), strcat(basename, 'nutrition_start.csv')); % nutrition at start
-    %writematrix(landscape_before_run(:,:,3), strcat(basename, 'dung_start.csv')); % dung at start
-    writematrix(animal_consumption, strcat(basename, 'animal_consumption.csv')); %food consumed by each animal
-    writematrix(proximity2center, strcat(basename, 'proximity2center.csv')); %closest each animal gets to center
-    writematrix(time_until_leaving, strcat(basename, 'time_until_leaving.csv')); %steps each animal took
-    writematrix(fert_steps, strcat(basename, 'fert_steps.csv')); %num of steps each animal took ending on mound
-    writematrix(tumble_steps, strcat(basename, 'tumble_steps.csv')); %num of steps each animal tumbled
-    
-    
+    writematrix(residency, strcat(basename, 'residency.csv')); % residency time, in ticks
+    writematrix(trajectories, strcat(basename, 'trajectories.csv')); % trajectories
+    writematrix(landscape(:,:,1), strcat(basename, 'quantity_end.csv')); % quantity
+    writematrix(landscape(:,:,2), strcat(basename, 'nutrition_end.csv')); % nutrition
+    writematrix(landscape(:,:,3), strcat(basename, 'dung_end.csv')); % dung
+    writematrix(landscape_before_run(:,:,1), strcat(basename, 'quantity_start.csv')); % quantity at start
+    writematrix(landscape_before_run(:,:,2), strcat(basename, 'nutrition_start.csv')); % nutrition at start
+    writematrix(landscape_before_run(:,:,3), strcat(basename, 'dung_start.csv')); % dung at start
+
 % In order to export the three dimensional landscape_over_time matrix in a way that makes sense
 % I'm going to export it as a two dimensional matrix with each slice pasted
 % below the proceeding one.
-%dynamic_landscape = permute(landscape_over_time, [1 3 2]);
-%dynamic_landscape = reshape(dynamic_landscape, [], size(landscape_over_time, 2), 1);
-%writematrix(dynamic_landscape, strcat(basename, 'dynamic_landscape.csv'));
+dynamic_landscape = permute(landscape_over_time, [1 3 2]);
+dynamic_landscape = reshape(dynamic_landscape, [], size(landscape_over_time, 2), 1);
+writematrix(dynamic_landscape, strcat(basename, 'dynamic_landscape.csv'));
 
 disp("All files saved successfully!")
 
