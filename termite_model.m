@@ -22,31 +22,35 @@ Contents:
 %}
 
 
-
 %% SET USER-DEFINED PARAMETERS:
-    % random or uniform, (neutral)? (string)
-    fertilizer_pattern = "uniform";
-    has_patches = false; %if false, landcape has same number of individual fertile grid squares, but arranged as single squares instead of in patches.
+
+    clearvars
+    close all
+    % random or uniform? (string)
+    fertilizer_pattern = "random";
+    mound_radius = 3.5; %default 3.5; Can be [0.5, 1.5, 2.5, 3.5, 4.5, 5.5]
     % Number of animals to run? (integer)
-    num_animals = 300;  %set number of animals to walk the Earth
+    num_animals = 1000;  %set number of animals to walk the Earth
     STRnum_animals = num2str(num_animals); % make a string version for data export
     % Max steps that each animal is allotted? (integer)
-    steps = 200;
+    steps = 1000;
     STRsteps = num2str(steps); % make a string version for data export
     %Movement strategy options
+    %true true is Orit's model, false false is Dan's model.
     able2stop = true; %If true, animals will stop, feed, and end step if they cross a good patch.
     run4ever = false; %if true, there is no max distance traveled while running.
     random_walk = false; %if true, animals move in a true random walk.
 
-
-
-
-
-
-
-
-
-
+    if able2stop
+        STRable2stop = "able2stop";
+    else
+        STRable2stop = "cantstop";
+    end
+    if run4ever
+        STRrun4ever = "run4ever";
+    else
+        STRrun4ever = "runhasmax";
+    end
 
 
 %% Model Script
@@ -59,9 +63,14 @@ Contents:
 % Landscape parameters (dimension, # animals, mound placement)
     xdim = 100;
     ydim = 100;
-    mound_radius = 3.5; % if change, need to change the "if ~has_patches block below"
-% N mounds need to be the same in both landscapes!
-    n_mounds_side = 5; %if regularly placed.
+
+    mound_area_Map = containers.Map({0.5, 1.5, 2.5, 3.5, 4.5, 5.5},...
+        {1, 9, 21, 37, 69, 97}); %hardcoded from looking at landscapes
+    mound_area = values(mound_area_Map, {mound_radius});
+    mound_area = mound_area{1};        
+    
+% N mounds need to be the same in both landscapes! 
+    n_mounds_side = 5; %if regularly placed. (square for number of mounds)
     n_mounds = n_mounds_side^2; % number of termite mounds if randomly placed
     max_grass = 100; %starting grass/nutrition level for fertilizer patches
     food_ratio = 5; %ratio of initial grass quantity and nutrition on fertilizered patches vs off
@@ -92,74 +101,54 @@ Contents:
     run_nutrition = 3;
     stop_food = 0.8;
 
-%{
-if fertilizer_pattern == "neutral"
-    food_ratio = 1;
-else
-    food_ratio = 5;
-end
-%}
+%Allow for different sized patches.
+n_pixels = 925; %Hardcoded from 25 mounds * 37 pixels/mound standard. (radius 3.5)
+n_mounds = floor(n_pixels/mound_area);
+n_pixels_extra = n_pixels - (n_mounds * mound_area);
+n_mounds_side = floor(sqrt(n_mounds));
+n_mounds_extra = n_mounds - n_mounds_side^2; 
 
-if ~has_patches %No patches! individual fertile squares!
-    size_circle = 37; %hardcoded in for mound_radius 3.5
-    n_mounds = n_mounds*size_circle;
-    n_mounds_side = floor(sqrt(n_mounds));
-    n_mounds_extra = n_mounds - n_mounds_side^2;
-    mound_radius = 0.5;
-else
-    n_mounds_extra = 0;
-end
 
 % Set up fertilizer mound locations, initialize landscape
 if fertilizer_pattern == "uniform"
     fert_x = linspace((boundary + 1 + floor(mound_radius)), (xdim - boundary - floor(mound_radius)), n_mounds_side);
     fert_y = linspace((boundary + 1 + floor(mound_radius)), (ydim - boundary - floor(mound_radius)), n_mounds_side);
-    %fert_x(1) = [];, fert_x(end) = []; %Remove fertilizer right on edge
-    %fert_y(1) = [];, fert_y(end) = []; %Remove fertilizer right on edge
     [X,Y] = meshgrid(fert_x, fert_y);
     fertilizer_xy = round([X(:), Y(:)]);
     if n_mounds_extra ~= 0  %The circles do not contain a perfect square number of gridspaces, so randomly assign remainder.
         fertilizer_xy = random_fertilizer(fertilizer_xy, n_mounds_extra, xdim, ydim, boundary, mound_radius);
     end
+    
     landscape = initialize_landscape_1(xdim, ydim, fertilizer_xy, max_grass, food_ratio, mound_radius);
-    landscape_before_run = landscape; % take snapshot of first frame for later reference
+
+    if n_pixels_extra ~= 0
+        landscape = add_fertile_pixels(landscape, n_pixels_extra, boundary, max_grass);
+    end
+    landscape_before_run = landscape; % take snapshot of first frame for later reference 
+
 elseif fertilizer_pattern == "random"
-    fertilizer_xy = zeros(n_mounds, 2);
+    fertilizer_xy = [];
     fertilizer_xy = random_fertilizer(fertilizer_xy, n_mounds, xdim, ydim, boundary, mound_radius);
     landscape = initialize_landscape_1(xdim, ydim, fertilizer_xy, max_grass, food_ratio, mound_radius);
+    if n_pixels_extra ~= 0
+        landscape = add_fertile_pixels(landscape, n_pixels_extra, boundary, max_grass);
+    end
     landscape_before_run = landscape; % take snapshot of first frame for later reference
- %{
-elseif fertilizer_pattern == "random"
-    %random_fert = [randi([1 xdim],1,n_mounds) ; randi([1 ydim],1,n_mounds)];
-    %fertilizer_xy = transpose(random_fert);
-    %Above allows fertilizer patches outside the boundary.
-    fert_x = randi([(1+boundary), (xdim - boundary)], 1, n_mounds);
-    fert_y = randi([(1+boundary), (ydim - boundary)], 1, n_mounds);
-    fertilizer_xy = transpose( [fert_x; fert_y]);
-    landscape = initialize_landscape_1(xdim, ydim, fertilizer_xy, max_grass, food_ratio, mound_radius);
-    landscape_before_run = landscape; % take snapshot of first frame for later reference
-%}
-        %{
-elseif fertilizer_pattern == "neutral"
-    fert_x = linspace((boundary + 1), (xdim - boundary), n_mounds_side);
-    fert_y = linspace((boundary + 1), (ydim - boundary), n_mounds_side);
-    %fert_x(1) = [];, fert_x(end) = []; %Remove fertilizer right on edge
-    %fert_y(1) = [];, fert_y(end) = []; %Remove fertilizer right on edge
-    [X,Y] = meshgrid(fert_x, fert_y);
-    fertilizer_xy = round([X(:), Y(:)]);
-    landscape = initialize_landscape_1(xdim, ydim, fertilizer_xy, max_grass, food_ratio, mound_radius);
-    landscape_before_run = landscape; % take snapshot of first frame for later reference
-%}
 else
-    disp("Exception: Fertilizer pattern not recognized. The options are 'random', 'uniform', and 'neutral'.")
+    disp("Exception: Fertilizer pattern not recognized. The options are 'random' and 'uniform'")
     clearvars
     return
+end  
+
+if sum(sum(landscape(:,:,2) == 1)) ~= 925
+    error("Error: Landscape intialized with incorrect number of fertile spaces");
 end
 
 % Preallocate dataframe to track landscape over time
-    landscape_over_time = zeros(xdim, ydim, num_animals);
+landscape_over_time = zeros(xdim, ydim, steps);
+dung_over_time = zeros(xdim, ydim, steps);
 
-
+%%
 %STEP 2: agents move through landscape.
 
 % Record trajectory of all animals. First three columns are first animal,
@@ -170,7 +159,9 @@ end
 trajectories = zeros(steps, 3*num_animals);
 time_until_leaving = zeros(num_animals,1); %record time animal exits
 dist_to_closest_mound = zeros(steps, num_animals);
-proximity_to_boundary = zeros(steps, num_animals);
+proximity_to_boundary = zeros(steps, num_animals); 
+fert_steps = zeros(num_animals, 1);
+tumble_steps = zeros(num_animals, 1);
 
 curr_location = zeros(1,2);
 memory = zeros(1,3);
@@ -178,6 +169,7 @@ memory = zeros(1,3);
 for animal = 1:num_animals
     % Take snapshot of landscape, append to landscape_over_time
     landscape_over_time(:, :, animal) = landscape(:,:,1);
+    dung_over_time(:,:,animal) = landscape(:,:,3);
 
     % Movement loop
     animal_x = 3*animal - 2;%These are for indexing trajectories array
@@ -236,9 +228,12 @@ for animal = 1:num_animals
             % and also where it probably makes sense to try to get a sense
             % for what seems reasonable.
             if food_here > 3 || recent_memory > 0.3 % TUMBLE
-                turning_angle = unifrnd(-max_turn_angle, max_turn_angle);
-                d = unifrnd(min_tumb, max_tumb);
-            else % RUN
+
+                turning_angle = unifrnd(-max_turn_angle, max_turn_angle); 
+                d = unifrnd(min_tumb, max_tumb); 
+                tumble_steps(animal) = tumble_steps(animal) + 1;
+            else % RUN 
+
                 turning_angle = unifrnd(-max_turn_angle/angle_ratio, max_turn_angle/angle_ratio);
                 d = unifrnd(min_run, max_run);
             end
@@ -260,13 +255,18 @@ for animal = 1:num_animals
         if leave == 1
             for remaining_steps = t+1 : steps+1
                 trajectories(remaining_steps, animal_x : animal_z) = NaN;
-                time_until_leaving(animal) = t;
+                time_until_leaving(animal) = t - 1;
             end
             break
             % Ends "t" loop. returns to "animal" loop.
         end
 
         % Animals consume more food if quality is higher
+
+        
+       
+        % Calculate distance to nearest mound  
+        
         food_consumed = grass_consumed * nutrition;
 
         trajectories(t+1, animal_x : animal_y) = [x2, y2]; %update location
@@ -275,7 +275,7 @@ for animal = 1:num_animals
 
 
         % Calculate distance to nearest mound
-        if has_patches
+        if mound_radius > 1 %can take a long time to compute
             mound_dists = zeros(n_mounds,1);
             for m = 1:n_mounds
                 mound = fertilizer_xy(m,:);
@@ -291,9 +291,9 @@ for animal = 1:num_animals
         proximity_to_boundary(t, animal) = min(dist_to_boundary);
         time_until_leaving(animal) = steps;
 
-    end
-
+    end  
 end
+
 
 
 %% Visualization
@@ -316,7 +316,7 @@ end
     hold off
 
 % Distance to nearest boundary.
-    figure
+%{    figure
     hold on
     for animal = 1:num_animals
         plot(1:steps, proximity_to_boundary(:, animal))
@@ -324,7 +324,7 @@ end
     end
     title('distance to boundary thru time')
     hold off
-
+%}
 % Plot distance to mound center through time for each animal
     figure
     hold on
