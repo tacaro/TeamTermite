@@ -149,8 +149,8 @@ else
 end     
     
 % Preallocate dataframe to track landscape over time
-    landscape_over_time = zeros(xdim, ydim, num_animals);
-    dung_over_time = zeros(xdim, ydim, num_animals);
+    landscape_over_time = zeros(xdim, ydim, steps);
+    dung_over_time = zeros(xdim, ydim, steps);
 
 %%
 %STEP 2: agents move through landscape.
@@ -292,6 +292,7 @@ for animal = 1:num_animals
         time_until_leaving(animal) = steps;
     
     end
+ %{
     if sum(sum(landscape(:,:,1) >= 60)) <= (n_pixels / 2)
         %Landscape depleted. End simulation.
         landscape_over_time(:, :, (animal + 1) : num_animals) = [];
@@ -304,8 +305,134 @@ for animal = 1:num_animals
         tumble_steps((animal + 1) : num_animals) = [];
         break
     end
-        
+   %}     
 end
+
+%% MAKING MOVIES
+
+cmap_grass = zeros(100,3); %Create greenscale colormap
+cmap_grass(:,2) = [1:100]/100;
+cmap_dung = zeros(100,3); %Create cyan colormap
+cmap_dung(:, 2) = [1:100]/200;
+cmap_dung(:, 3) = [1:100]/200;
+
+
+clear grass_movie
+grass_movie(num_animals) = struct('cdata',[],'colormap',[]);
+clear dung_movie
+dung_movie(num_animals) = struct('cdata',[],'colormap',[]);
+
+Xtraj = zeros(steps, 1);
+Ytraj = zeros(steps, 1);
+xlim = [1, 100];
+ylim = [1, 100];
+max_dung = max(max(dung_over_time(:,:,num_animals)))
+
+for animal_i  = 1 : num_animals
+    animal_i
+    close all
+%Trajectory of this animal
+ %   for tt = 0:9
+  %      Xtraj(:, tt+1) = trajectories(1:steps, 3*(10*animal_i-tt)-2);
+   %     Ytraj(:, tt+1) = trajectories(1:steps, 3*(10*animal_i-tt)-1);
+    %end
+    %Xtraj = Xtraj(~isnan(Xtraj));
+    %Ytraj = Ytraj(~isnan(Ytraj)):
+    
+    
+    im_grass = figure('Visible', false);
+    figure(im_grass);
+    imagesc(landscape_over_time(:,:,animal_i), [0, 100]);
+    hold on
+    colormap(parula);
+    colorbar;
+    title('Grass Quantity', 'FontSize', 24);
+    %plot(Ytraj, Xtraj, 'LineWidth', 3, 'Color', 'm')
+    hold off
+
+    im_dung = figure('Visible', false);
+    figure(im_dung);
+    imagesc(dung_over_time(:,:,animal_i), [0, max_dung]);
+    hold on
+    colormap(parula);
+    colorbar;
+    title('Dung Quantity', 'FontSize', 24);
+    %plot(Ytraj, Xtraj, 'LineWidth', 3, 'Color', 'm')
+    hold off
+
+    grass_movie(animal_i) = getframe(im_grass);
+    dung_movie(animal_i) = getframe(im_dung);
+
+end
+
+
+%{
+clear grass_movie
+grass_movie(steps) = struct('cdata',[],'colormap',[]);
+clear dung_movie
+dung_movie(steps) = struct('cdata',[],'colormap',[]);
+
+Xtraj = trajectories(:,1);
+Ytraj = trajectories(:,2);
+Xtraj = Xtraj(~isnan(Xtraj));
+Ytraj = Ytraj(~isnan(Ytraj));
+max_dung = max(max(max(dung_over_time)));
+Xmax = ceil(max(Xtraj));
+Xmin = floor(min(Xtraj));
+Ymax = ceil(max(Ytraj));
+Ymin = floor(min(Ytraj));
+
+for step  = 1 %: (size(Xtraj, 1) - 1)
+
+    close all
+%Trajectory of this animal
+    Xstep = Xtraj(step:step+1) - Xmin;
+    Ystep = Ytraj(step:step+1) - Ymin;
+    
+    im_grass = figure('visible', 'off');
+    figure(im_grass)
+    imagesc(landscape_over_time(Ymin:Ymax ,Xmin:Xmax ,step), [0, 100]);
+    hold on
+    colormap(cmap_grass)
+    colorbar
+    title('Grass Quantity');
+    plot(Xstep, Ystep, 'LineWidth', 3, 'Color', 'm')
+    hold off
+
+    im_dung = figure('visible', 'off');
+    figure(im_dung)
+    imagesc(dung_over_time(Ymin:Ymax ,Xmin:Xmax ,step), [0, max_dung*2]);
+    hold on
+    colormap(cmap_dung)
+    colorbar
+    title('Dung Quantity');
+    plot(Ystep, Xstep, 'LineWidth', 3, 'Color', 'm')
+    hold off
+pause(2);
+    grass_movie(step) = getframe(im_grass);
+    dung_movie(step) = getframe(im_dung);
+
+end
+%}
+
+
+
+v_grass = VideoWriter([num2str(fertilizer_pattern),'_','Animals',...
+    num2str(num_animals),'Steps',num2str(steps),'Dim',num2str(xdim),...
+    'grass2.mp4'],'MPEG-4');
+v_grass.FrameRate = 24;
+open(v_grass);
+writeVideo(v_grass, grass_movie);
+close(v_grass);
+
+v_dung = VideoWriter([num2str(fertilizer_pattern),'_','Animals',...
+    num2str(num_animals),'Steps',num2str(steps),'Dim',num2str(xdim),...
+    'dung2.mp4'],'MPEG-4');
+v_dung.FrameRate = 24;
+open(v_dung);
+writeVideo(v_dung, dung_movie);
+close(v_dung);
+
 
 %% Liam Data collection
 
