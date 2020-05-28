@@ -28,7 +28,7 @@ Contents:
     close all
     % random or uniform? (string)
     fertilizer_pattern = "random";
-    mound_radius = 0.5; %default 3.5; Can be [0.5, 1.5, 2.5, 3.5, 4.5, 5.5]
+    mound_radius = 3.5; %default 3.5; Can be [0.5, 1.5, 2.5, 3.5, 4.5, 5.5]
     % Number of animals to run? (integer)
     num_animals = 1000;  %set number of animals to walk the Earth
     STRnum_animals = num2str(num_animals); % make a string version for data export
