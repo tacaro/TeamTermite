@@ -28,7 +28,7 @@ Contents:
     close all
     % random, hexagon, or square? (string)
     fertilizer_pattern = "hexagon";
-    mound_radius = 2.5; %default 3.5; Can be [0.5, 1.5, 2.5, 3.5, 4.5, 5.5]
+    mound_radius = 3.5; %default 3.5; Can be [0.5, 1.5, 2.5, 3.5, 4.5, 5.5]
     % Number of animals to run? (integer)
     num_animals = 1000;  %set number of animals to walk the Earth
     STRnum_animals = num2str(num_animals); % make a string version for data export
@@ -112,51 +112,39 @@ n_mounds_extra = n_mounds - n_mounds_side^2;
 % Set up fertilizer mound locations, initialize landscape
 if fertilizer_pattern == "hexagon"
     [fertilizer_xy, n_mounds_extra] = hexGrid(xdim, ydim, boundary, mound_radius, n_mounds);   
-    if n_mounds_extra ~= 0  %The circles do not contain a perfect square number of gridspaces, so randomly assign remainder.
-        fertilizer_xy = random_fertilizer(fertilizer_xy, n_mounds_extra, xdim, ydim, boundary, mound_radius);
-    end
-    landscape = initialize_landscape_1(xdim, ydim, fertilizer_xy, max_grass, food_ratio, mound_radius);
-    
-    if n_pixels_extra ~= 0
-        landscape = add_fertile_pixels(landscape, n_pixels_extra, boundary, max_grass);
-    end
-    landscape_before_run = landscape; % take snapshot of first frame for later reference 
-    
+   
 elseif fertilizer_pattern == "square"
     fert_x = linspace((boundary + 1 + floor(mound_radius)), (xdim - boundary - floor(mound_radius)), n_mounds_side);
     fert_y = linspace((boundary + 1 + floor(mound_radius)), (ydim - boundary - floor(mound_radius)), n_mounds_side);
     [X,Y] = meshgrid(fert_x, fert_y);
     fertilizer_xy = round([X(:), Y(:)]);
-    if n_mounds_extra ~= 0  %The circles do not contain a perfect square number of gridspaces, so randomly assign remainder.
-        fertilizer_xy = random_fertilizer(fertilizer_xy, n_mounds_extra, xdim, ydim, boundary, mound_radius);
-    end
     
-    landscape = initialize_landscape_1(xdim, ydim, fertilizer_xy, max_grass, food_ratio, mound_radius);
-
-    if n_pixels_extra ~= 0
-        landscape = add_fertile_pixels(landscape, n_pixels_extra, boundary, max_grass);
-    end
-    landscape_before_run = landscape; % take snapshot of first frame for later reference 
-
 elseif fertilizer_pattern == "random"
     fertilizer_xy = [];
     fertilizer_xy = random_fertilizer(fertilizer_xy, n_mounds, xdim, ydim, boundary, mound_radius);
-    landscape = initialize_landscape_1(xdim, ydim, fertilizer_xy, max_grass, food_ratio, mound_radius);
-    if n_pixels_extra ~= 0
-        landscape = add_fertile_pixels(landscape, n_pixels_extra, boundary, max_grass);
-    end
-    landscape_before_run = landscape; % take snapshot of first frame for later reference
+
 else
     disp("Exception: Fertilizer pattern not recognized. The options are 'random', 'hexagon', and 'square'")
     clearvars
     return
 end  
 
+%The following 2 if statements maintain a constant number of fertile pixels
+%on the initial landscape when the pattern and mound_radius do not
+%automatically create such a landscape.
+if n_mounds_extra ~= 0  %The circles do not contain a perfect square number of gridspaces, so randomly assign remainder.
+    fertilizer_xy = random_fertilizer(fertilizer_xy, n_mounds_extra, xdim, ydim, boundary, mound_radius);
+end
+landscape = initialize_landscape_1(xdim, ydim, fertilizer_xy, max_grass, food_ratio, mound_radius);
+if n_pixels_extra ~= 0
+    landscape = add_fertile_pixels(landscape, n_pixels_extra, boundary, max_grass);
+end
 if sum(sum(landscape(:,:,2) == 1)) ~= 925
     error("Error: Landscape intialized with incorrect number of fertile spaces");
 end
 
 % Preallocate dataframe to track landscape over time
+landscape_before_run = landscape; % take snapshot of first frame for later reference 
 landscape_over_time = zeros(xdim, ydim, steps);
 dung_over_time = zeros(xdim, ydim, steps);
 
