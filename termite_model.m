@@ -227,7 +227,7 @@ for animal = 1:num_animals
             % ** this is where the run vs tumble decision is finally made,
             % and also where it probably makes sense to try to get a sense
             % for what seems reasonable.
-            if food_here > 3 || recent_memory > 0.3 % TUMBLE
+            if food_here > 3 || recent_memory > 3 % TUMBLE
 
                 turning_angle = unifrnd(-max_turn_angle, max_turn_angle); 
                 d = unifrnd(min_tumb, max_tumb); 
