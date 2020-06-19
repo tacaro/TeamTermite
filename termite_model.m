@@ -287,8 +287,8 @@ for animal = 1:num_animals
         end
         %}
         % Calculate distance to nearest boundary
-        dist_to_boundary = [x2; xdim - x2; y2; ydim - y2] - boundary;
-        proximity_to_boundary(t, animal) = min(dist_to_boundary);
+        dist_to_edge = [x2; xdim - x2; y2; ydim - y2];
+        proximity_to_boundary(t, animal) = min(dist_to_edge);
         time_until_leaving(animal) = steps;
 
     end  
@@ -315,7 +315,7 @@ end
     title('fullness through time ');
     hold off
 
-% Distance to nearest boundary.
+% Distance to nearest edge.
 %{    figure
     hold on
     for animal = 1:num_animals
