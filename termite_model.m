@@ -29,52 +29,59 @@ Contents:
     % random, hexagon, or square? (string)
     fertilizer_pattern = "hexagon";
     mound_radius = 3.5; %default 3.5; Can be [0.5, 1.5, 2.5, 3.5, 4.5, 5.5]
+    keep_constant = "mounds"; %number of "pixels" or "mounds" or the "fraction_fertile"
+    %to be kept constant if mound_radius or xdim or ydim change
     % Number of animals to run? (integer)
     num_animals = 1000;  %set number of animals to walk the Earth
-    STRnum_animals = num2str(num_animals); % make a string version for data export
     % Max steps that each animal is allotted? (integer)
     steps = 1000;
-    STRsteps = num2str(steps); % make a string version for data export
     %Movement strategy options
     %true true is Orit's model, false false is Dan's model.
-    able2stop = true; %If true, animals will stop, feed, and end step if they cross a good patch.
+    able2stop = false; %If true, animals will stop, feed, and end step if they cross a good patch.
     run4ever = false; %if true, there is no max distance traveled while running.
     random_walk = false; %if true, animals move in a true random walk.
-
-    if able2stop
-        STRable2stop = "able2stop";
-    else
-        STRable2stop = "cantstop";
-    end
-    if run4ever
-        STRrun4ever = "run4ever";
-    else
-        STRrun4ever = "runhasmax";
-    end
 
 
 %% Model Script
 % Model parameters
 % Grazing parameters
-    feed_time = 1; %relative to total movement time (of 1)
+    feed_time = 1; %relative to total movement time (of 1). Affects how dung distributes
     max_feed = 5; %max amount can feed per turn
-    energy_spent = 3; %fullness lost per turn
 
 % Landscape parameters (dimension, # animals, mound placement)
     xdim = 100;
     ydim = 100;
-
+    boundary = 5; % fertile pixels will not initialize within this many pixels of the edge of the landscape.
+                  %animals CAN move in the boundary.
     mound_area_Map = containers.Map({0.5, 1.5, 2.5, 3.5, 4.5, 5.5},...
         {1, 9, 21, 37, 69, 97}); %hardcoded from looking at landscapes
     mound_area = values(mound_area_Map, {mound_radius});
     mound_area = mound_area{1};        
     
 % N mounds need to be the same in both landscapes! 
-    n_mounds_side = 5; %if regularly placed. (square for number of mounds)
-    n_mounds = n_mounds_side^2; % number of termite mounds if randomly placed
+    n_mounds = 24; % number of termite mounds if randomly placed
+    %if change n_mounds, change n_pixels below!!!
     max_grass = 100; %starting grass/nutrition level for fertilizer patches
     food_ratio = 5; %ratio of initial grass quantity and nutrition on fertilizered patches vs off
 
+    %Allow for different sized patches.
+if keep_constant == "pixels"
+    n_pixels = 888; %Hardcoded from 24 mounds * 37 pixels/mound standard. (radius 3.5)
+                    %Can find other mound areas in mound_area_Map container
+    n_mounds = floor(n_pixels/mound_area);
+    n_pixels_extra = n_pixels - (n_mounds * mound_area);
+elseif keep_constant == "mounds"
+    n_pixels = n_mounds * mound_area;
+    n_pixels_extra = 0;
+elseif keep_constant == "fraction_fertile"
+    n_pixels = round(888 * xdim * ydim / 10^4); %hardcoded from 24 mounds, radius 3.5, 100x100 landscape
+    n_mounds = floor(n_pixels/mound_area);
+    n_pixels_extra = n_pixels - (n_mounds * mound_area);
+else
+    error("Error: keep_constant variable assigned to unrecognized value")
+end
+    
+    
 % Movement angle/dist parameters
     max_turn_angle = pi;
     angle_ratio = 3; %How much less max turn angle is for run than tumble.
@@ -83,9 +90,7 @@ Contents:
     run_tumb_ratio = 4; %how much longer is run dist than tumble?
     min_run = min_tumb * run_tumb_ratio;
     max_run = max_tumb * run_tumb_ratio;
-    %boundary = max_run;
-    boundary = 5; % fertile pixels will not initialize within this many pixels of the edge of the landscape.
-                    %animals CAN move in the boundary.
+
     if run4ever
         min_run = 2*xdim;
         max_run = 2*xdim;
@@ -103,12 +108,6 @@ Contents:
     run_nutrition = 3;
     stop_food = 0.8;
 
-%Allow for different sized patches.
-n_pixels = 925; %Hardcoded from 25 mounds * 37 pixels/mound standard. (radius 3.5)
-n_mounds = floor(n_pixels/mound_area);
-n_pixels_extra = n_pixels - (n_mounds * mound_area);
-n_mounds_side = floor(sqrt(n_mounds));
-n_mounds_extra = n_mounds - n_mounds_side^2; 
 
 
 % Set up fertilizer mound locations, initialize landscape
@@ -116,6 +115,8 @@ if fertilizer_pattern == "hexagon"
     [fertilizer_xy, n_mounds_extra] = hexGrid(xdim, ydim, boundary, mound_radius, n_mounds);   
    
 elseif fertilizer_pattern == "square"
+    n_mounds_side = floor(sqrt(n_mounds));
+    n_mounds_extra = n_mounds - n_mounds_side^2; 
     fert_x = linspace((boundary + 1 + floor(mound_radius)), (xdim - boundary - floor(mound_radius)), n_mounds_side);
     fert_y = linspace((boundary + 1 + floor(mound_radius)), (ydim - boundary - floor(mound_radius)), n_mounds_side);
     [X,Y] = meshgrid(fert_x, fert_y);
@@ -124,6 +125,7 @@ elseif fertilizer_pattern == "square"
 elseif fertilizer_pattern == "random"
     fertilizer_xy = [];
     fertilizer_xy = random_fertilizer(fertilizer_xy, n_mounds, xdim, ydim, boundary, mound_radius);
+    n_mounds_extra = 0;
 
 else
     disp("Exception: Fertilizer pattern not recognized. The options are 'random', 'hexagon', and 'square'")
@@ -135,13 +137,15 @@ end
 %on the initial landscape when the pattern and mound_radius do not
 %automatically create such a landscape.
 if n_mounds_extra ~= 0  %The circles do not contain a perfect square number of gridspaces, so randomly assign remainder.
+    disp("Extra mounds did not fit in pattern and are randomly distributed.");
     fertilizer_xy = random_fertilizer(fertilizer_xy, n_mounds_extra, xdim, ydim, boundary, mound_radius);
 end
 landscape = initialize_landscape_1(xdim, ydim, fertilizer_xy, max_grass, food_ratio, mound_radius);
 if n_pixels_extra ~= 0
+    disp("Extra pixels not divided evenly into mounds are randomly distributed.");
     landscape = add_fertile_pixels(landscape, n_pixels_extra, boundary, max_grass);
 end
-if sum(sum(landscape(:,:,2) == 1)) ~= 925
+if sum(sum(landscape(:,:,2) == 1)) ~= n_pixels
     error("Error: Landscape intialized with incorrect number of fertile spaces");
 end
 
@@ -417,6 +421,8 @@ end
 %% Data Export
 % Create a hash key that is unique to this simulation run
 % The key is current datetime + two random AZ characters
+STRnum_animals = num2str(num_animals); % make a string version for data export
+STRsteps = num2str(steps); % make a string version for data export
 now = num2str(fix(clock));
 now = now(~isspace(now));
 run_ID = strcat(now, randsample(char(97:122), 2));

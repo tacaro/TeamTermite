@@ -28,8 +28,19 @@ aspect = ydim / xdim;
 
 y_roots = roots([1 0.5 (-n_mounds * cos30 * aspect)]);
 y_choose = y_roots > 0 ;
-y_per_side = round(y_roots(y_choose));
-x_per_side = round(n_mounds / y_per_side);
+y_per_side_1 = ceil(y_roots(y_choose));
+x_per_side_1 = floor(n_mounds / y_per_side_1);
+y_per_side_2 = floor(y_roots(y_choose));
+x_per_side_2 = floor(n_mounds / y_per_side_2);
+if (n_mounds - (y_per_side_1 * x_per_side_1)) < ... 
+        (n_mounds - (y_per_side_2 * x_per_side_2))
+    y_per_side = y_per_side_1;
+    x_per_side = x_per_side_1;
+else
+    y_per_side = y_per_side_2;
+    x_per_side = x_per_side_2; 
+end
+    
 n_mounds_extra = n_mounds - (y_per_side * x_per_side);
 
 %scale is distance between points along y axis of xy grid. The (-1) on each
