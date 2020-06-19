@@ -83,7 +83,8 @@ Contents:
     run_tumb_ratio = 4; %how much longer is run dist than tumble?
     min_run = min_tumb * run_tumb_ratio;
     max_run = max_tumb * run_tumb_ratio;
-    boundary = max_run;
+    %boundary = max_run;
+    boundary = 0;
     if run4ever
         min_run = 2*xdim;
         max_run = 2*xdim;
