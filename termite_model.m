@@ -84,7 +84,7 @@ Contents:
     min_run = min_tumb * run_tumb_ratio;
     max_run = max_tumb * run_tumb_ratio;
     %boundary = max_run;
-    boundary = 0;
+    boundary = 0; %boundary variable can be removed from all functions/scripts
     if run4ever
         min_run = 2*xdim;
         max_run = 2*xdim;
@@ -181,7 +181,6 @@ for animal = 1:num_animals
     % Pick x or y to start on, other var is 1 or max.
     A = [1+boundary, xdim-boundary];
     astart = A(randi(length(A), 1));
-    %bstart = (randi(xdim, 1)); %%%I think this allows a coordinate outside the boundary?
     bstart = boundary + randi(xdim - 2*boundary);
     starting_pos = [astart,bstart ; bstart,astart ];
     start_pos = starting_pos(:,randi(2,1));
