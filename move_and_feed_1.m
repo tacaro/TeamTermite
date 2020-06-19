@@ -20,21 +20,20 @@ FEED: return grass_consumed and nutrition values, determine time spent
 grazing update the landscape (increment grass and dung). As of now,
 dung increments by input "feed_time"
     
-LEAVE: leave is TRUE if animal moved to be within "boundary" number of
-grid spaces of the edge of the landscape array.
+LEAVE: leave is TRUE if animal moves onto or across edge of landscape.
 %}
     
 
 
 function [landscape, grass_consumed, nutrition, x_stop, y_stop, leave] = move_and_feed_1(landscape, x1, y1,...
-    x2, y2, boundary, max_feed, max_grass, feed_time, stop_food, able2stop)
+    x2, y2, max_feed, max_grass, feed_time, stop_food, able2stop)
 
 
 %MOVE
 
 
 [path_array, crossing_array] = move_1(x1, y1, x2, y2);
-[path_array, leave, x_stop, y_stop] = check_path(landscape, path_array, crossing_array, max_grass, stop_food, boundary, able2stop);
+[path_array, leave, x_stop, y_stop] = check_path(landscape, path_array, crossing_array, max_grass, stop_food, able2stop);
 num_squares = size(path_array, 1);
 for square = 1:num_squares
     xx = path_array(square, 1);

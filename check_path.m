@@ -21,7 +21,7 @@ not make a copy of it. (Otherwise it would be a laborious task for the
 computer)
 %}
 
-function [path_array, leave, x_stop, y_stop] = check_path(landscape, path_array, crossing_array, max_grass, stop_food, boundary, able2stop)
+function [path_array, leave, x_stop, y_stop] = check_path(landscape, path_array, crossing_array, max_grass, stop_food, able2stop)
 
 num_squares = size(path_array, 1);
 num_crosses = size(crossing_array, 1);
@@ -34,9 +34,8 @@ for cross = 2:num_crosses
         %start at 2 so won't stay in same square if wanted to leave.
     xx = crossing_array(cross, 1);
     yy = crossing_array(cross, 2);
-    if (xx + boundary) >= size(landscape, 2) + 0.5 || ...
-        (xx - boundary) <= 0.5 || (yy + boundary) >= size(landscape, 1) + 0.5 || ...
-        (yy - boundary) <= 0.5 
+    if xx >= size(landscape, 2) + 0.5 || xx <= 0.5 || ...
+            yy >= size(landscape, 1) + 0.5 || yy <= 0.5 
         %disp("path"), disp(path_array);
         %disp("crossing"), disp(crossing_array);
         path_array( (cross : num_squares), : ) = [];

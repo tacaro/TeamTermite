@@ -84,7 +84,8 @@ Contents:
     min_run = min_tumb * run_tumb_ratio;
     max_run = max_tumb * run_tumb_ratio;
     %boundary = max_run;
-    boundary = 0; %boundary variable can be removed from all functions/scripts
+    boundary = 5; % fertile pixels will not initialize within this many pixels of the edge of the landscape.
+                    %animals CAN move in the boundary.
     if run4ever
         min_run = 2*xdim;
         max_run = 2*xdim;
@@ -179,20 +180,20 @@ for animal = 1:num_animals
 
     % Random starting position on perimeter of landscape:
     % Pick x or y to start on, other var is 1 or max.
-    A = [1+boundary, xdim-boundary];
+    A = [1, xdim];
     astart = A(randi(length(A), 1));
-    bstart = boundary + randi(xdim - 2*boundary);
+    bstart = randi(xdim);
     starting_pos = [astart,bstart ; bstart,astart ];
     start_pos = starting_pos(:,randi(2,1));
 
     % Set starting directions.
-    if start_pos(1) == 1+boundary
+    if start_pos(1) == 1
         direction = (-pi/2) + (pi*rand);
-    elseif start_pos(1) == xdim-boundary
+    elseif start_pos(1) == xdim
         direction = (pi/2) + (pi*rand);
-    elseif start_pos(2) == 1+boundary
+    elseif start_pos(2) == 1
         direction = -(pi*rand);
-    elseif start_pos(2) == xdim-boundary
+    elseif start_pos(2) == xdim
         direction = (pi*rand);
     else
         disp("Something is wrong with starting direction, exiting script!");
@@ -251,7 +252,7 @@ for animal = 1:num_animals
         % returned x2 and y2 will be different from inputs if animal crossed
         % boundary or crossed a good patch and stopped.
         [landscape, grass_consumed, nutrition, x2, y2, leave] = ...
-            move_and_feed_1(landscape, x1, y1, x2, y2, boundary, max_feed, max_grass, feed_time, stop_food, able2stop);
+            move_and_feed_1(landscape, x1, y1, x2, y2, max_feed, max_grass, feed_time, stop_food, able2stop);
         if leave == 1
             for remaining_steps = t+1 : steps+1
                 trajectories(remaining_steps, animal_x : animal_z) = NaN;
