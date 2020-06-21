@@ -171,7 +171,7 @@ fert_steps = zeros(num_animals, 1);
 tumble_steps = zeros(num_animals, 1);
 
 curr_location = zeros(1,2);
-memory = zeros(1,n_memories);
+memory = nan(1,n_memories);
 
 for animal = 1:num_animals
     % Take snapshot of landscape, append to landscape_over_time
@@ -208,7 +208,7 @@ for animal = 1:num_animals
     trajectories(1, animal_x : animal_y) = [start_pos];
     %initialize. Goes to 1 when animal leaves boundary on landscape.
     leave = 0;
-    memory(:) = 0;
+    memory(:) = nan(1,n_memories);
     %memory(1) is least recent, (n_memories) most recent.
 
     %landscape_over_time = landscape_over_time(:,:,landscape(:,:,1);
@@ -229,7 +229,7 @@ for animal = 1:num_animals
             % Choose turn size & movement distance
             %  decision to tumble is a fct of memory, which = food consumed. 
             % memory is just how much food was eaten the last N time steps
-            recent_memory = mean(memory);
+            recent_memory = nanmean(memory);
             
             %if we want to weight nutrition even further, could * by
             %nutrition again at current location: 
