@@ -55,7 +55,9 @@ if leave == 0
     grass = landscape(y_f, x_f, 1);
     nutrition = landscape(y_f, x_f, 2);
     %old grass_consumed = round(grass * max_feed / max_grass, 1);
-    grass_consumed = round((max_feed)*(nutrition)*(grass/max_grass), 1)
+    grass_consumed = round((max_feed)*(nutrition)*(grass/max_grass), 1);
+    %make sure animal cannot consume more grass than is available
+    grass_consumed = min(grass, grass_consumed);
     landscape(y_f, x_f, 1) = grass - grass_consumed;
     landscape(y_f, x_f, 3) = landscape(y_f, x_f, 3) + feed_time + (1 - move_time);
     

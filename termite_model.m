@@ -32,22 +32,23 @@ Contents:
     keep_constant = "mounds"; %number of "pixels" or "mounds" or the "fraction_fertile"
     %to be kept constant if mound_radius or xdim or ydim change
     % Number of animals to run? (integer)
-    num_animals = 1000;  %set number of animals to walk the Earth
+    num_animals = 10;  %set number of animals to walk the Earth
     % Max steps that each animal is allotted? (integer)
-    steps = 1000;
+    steps = 20;
     %Movement strategy options
     %true true is Orit's model, false false is Dan's model.
     able2stop = false; %If true, animals will stop, feed, and end step if they cross a good patch.
     run4ever = false; %if true, there is no max distance traveled while running.
     random_walk = false; %if true, animals move in a true random walk.
-
+    
 
 %% Model Script
 % Model parameters
 % Grazing parameters
     feed_time = 1; %relative to total movement time (of 1). Affects how dung distributes
     max_feed = 5; %max amount can feed per turn
-
+    n_memories = 1; % n of steps that animal remembers (for tumble decision)
+    
 % Landscape parameters (dimension, # animals, mound placement)
     xdim = 100;
     ydim = 100;
@@ -170,7 +171,7 @@ fert_steps = zeros(num_animals, 1);
 tumble_steps = zeros(num_animals, 1);
 
 curr_location = zeros(1,2);
-memory = zeros(1,3);
+memory = zeros(1,n_memories);
 
 for animal = 1:num_animals
     % Take snapshot of landscape, append to landscape_over_time
@@ -208,7 +209,7 @@ for animal = 1:num_animals
     %initialize. Goes to 1 when animal leaves boundary on landscape.
     leave = 0;
     memory(:) = 0;
-    %memory(1) is most recent, (3) least recent.
+    %memory(1) is least recent, (n_memories) most recent.
 
     %landscape_over_time = landscape_over_time(:,:,landscape(:,:,1);
 
@@ -218,16 +219,22 @@ for animal = 1:num_animals
         x1 = curr_location(1);
         y1 = curr_location(2);
         [grass_quantity, nutrition] = current_location(landscape,x1, y1);
+        
+        %do we use food here any more? I wasn't sure but didn't want to
+        %delete.
         food_here = round(grass_quantity * nutrition * max_feed / max_grass, 1);
 
 % Decide on movement strategy and calculate next location
 
             % Choose turn size & movement distance
-            % Could try making tumble just pi + run angles
-            % for now, decision to run vs tumble both a fct of food here and
-            % recent memory.
+            %  decision to tumble is a fct of memory, which = food consumed. 
+            % memory is just how much food was eaten the last N time steps
             recent_memory = mean(memory);
-
+            
+            %if we want to weight nutrition even further, could * by
+            %nutrition again at current location: 
+            
+            %recent_memory = mean(memory) * nutrition
 
             % ** this is where the run vs tumble decision is finally made,
             % and also where it probably makes sense to try to get a sense
@@ -265,20 +272,23 @@ for animal = 1:num_animals
             break
             % Ends "t" loop. returns to "animal" loop.
         end
-
-        % Animals consume more food if quality is higher
-
+          
         
-       
-        % Calculate distance to nearest mound  
-        
-        food_consumed = grass_consumed * nutrition;
-
         trajectories(t+1, animal_x : animal_y) = [x2, y2]; %update location
-        trajectories(t+1, animal_z) = food_consumed;
-        memory(3) = memory(2);, memory(2) = memory(1);, memory(1) = food_consumed;
-
-
+        trajectories(t+1, animal_z) = grass_consumed;
+          
+        %memory(3) = memory(2);, memory(2) = memory(1);, memory(1) = grass_consumed;
+        
+        %added in a loop here in case  n_memories = 1
+        if n_memories > 1
+            memory(2:end) = memory(1:(n_memories-1)); 
+            memory(n_memories) = grass_consumed;
+        else 
+            memory = grass_consumed;
+        end 
+        
+        
+        
         % Calculate distance to nearest mound
         if mound_radius > 1 %can take a long time to compute
             mound_dists = zeros(n_mounds,1);
@@ -452,6 +462,7 @@ basename = strcat('dfs/', run_ID, "/", fertilizer_pattern, "_", STRsteps, "_", S
             'stay_nutrition', stay_nutrition;
             'run_nutrition', run_nutrition;
             'stop_food', stop_food;
+            'n_memories', n_memories;
             };
       MTDA = cell2table(MTDA, 'VariableNames', {'Parameter', 'Value'});
       writetable(MTDA, strcat(basename, 'metadata.csv'));
@@ -461,6 +472,7 @@ basename = strcat('dfs/', run_ID, "/", fertilizer_pattern, "_", STRsteps, "_", S
     disp(strcat("This run's identifier is:", run_ID));
     writematrix(residency, strcat(basename, 'residency.csv')); % residency time, in ticks
     writematrix(trajectories, strcat(basename, 'trajectories.csv')); % trajectories
+    writematrix(fertilizer_xy, strcat(basename, 'fertilizer_locations.csv')); %fertilizer locations
     writematrix(landscape(:,:,1), strcat(basename, 'quantity_end.csv')); % quantity
     writematrix(landscape(:,:,2), strcat(basename, 'nutrition_end.csv')); % nutrition
     writematrix(landscape(:,:,3), strcat(basename, 'dung_end.csv')); % dung
