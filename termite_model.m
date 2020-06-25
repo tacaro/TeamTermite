@@ -32,9 +32,9 @@ Contents:
     keep_constant = "mounds"; %number of "pixels" or "mounds" or the "fraction_fertile"
     %to be kept constant if mound_radius or xdim or ydim change
     % Number of animals to run? (integer)
-    num_animals = 10;  %set number of animals to walk the Earth
+    num_animals = 500;  %set number of animals to walk the Earth
     % Max steps that each animal is allotted? (integer)
-    steps = 20;
+    steps = 1000;
     %Movement strategy options
     %true true is Orit's model, false false is Dan's model.
     able2stop = false; %If true, animals will stop, feed, and end step if they cross a good patch.
@@ -83,7 +83,8 @@ else
 end
     
     
-% Movement angle/dist parameters
+% Movement angle/dist parameters. 
+%CAN we remove this section below? 
     max_turn_angle = pi;
     angle_ratio = 3; %How much less max turn angle is for run than tumble.
     min_tumb = 0.5; %minimum tumble distance
@@ -236,18 +237,18 @@ for animal = 1:num_animals
             
             %recent_memory = mean(memory) * nutrition
 
-            % ** this is where the run vs tumble decision is finally made,
-            % and also where it probably makes sense to try to get a sense
-            % for what seems reasonable.
-            if food_here > 3 || recent_memory > 3 % TUMBLE
-
-                turning_angle = unifrnd(-max_turn_angle, max_turn_angle); 
-                d = unifrnd(min_tumb, max_tumb); 
+            % ** this is where the run vs tumble decision is made
+            
+            if recent_memory > 3 % TUMBLE
+                turning_angle = vmrand(pi, 2, 1); %circular normal. vmrand(mean, var, n)
+                d = min(gamrnd(1, 2, 1),max_tumb); %gamma. shape = 1, scale =2
                 tumble_steps(animal) = tumble_steps(animal) + 1;
+                
             else % RUN 
 
-                turning_angle = unifrnd(-max_turn_angle/angle_ratio, max_turn_angle/angle_ratio);
-                d = unifrnd(min_run, max_run);
+                turning_angle = vmrand(0, 2, 1); %vmrand(mean, var, n)
+                d = min(gamrnd(2, 2, 1),max_run); %gamma. shape = 2, scale =2
+                
             end
 
             direction = rem(direction + turning_angle, (2*pi)); % Take remainder so always between [-2*pi, 2*pi]
