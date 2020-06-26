@@ -32,9 +32,9 @@ Contents:
     keep_constant = "mounds"; %number of "pixels" or "mounds" or the "fraction_fertile"
     %to be kept constant if mound_radius or xdim or ydim change
     % Number of animals to run? (integer)
-    num_animals = 500;  %set number of animals to walk the Earth
+    num_animals = 20;  %set number of animals to walk the Earth
     % Max steps that each animal is allotted? (integer)
-    steps = 1000;
+    steps = 20;
     %Movement strategy options
     %true true is Orit's model, false false is Dan's model.
     able2stop = false; %If true, animals will stop, feed, and end step if they cross a good patch.
@@ -52,7 +52,7 @@ Contents:
 % Landscape parameters (dimension, # animals, mound placement)
     xdim = 100;
     ydim = 100;
-    boundary = 5; % fertile pixels will not initialize within this many pixels of the edge of the landscape.
+    boundary = 10; % fertile pixels will not initialize within this many pixels of the edge of the landscape.
                   %animals CAN move in the boundary.
     mound_area_Map = containers.Map({0.5, 1.5, 2.5, 3.5, 4.5, 5.5},...
         {1, 9, 21, 37, 69, 97}); %hardcoded from looking at landscapes
@@ -164,7 +164,7 @@ dung_over_time = zeros(xdim, ydim, steps);
 % food consumed at that step.
 
 % Trajectories are saved as xpos, ypos, and fullness for each agent.
-trajectories = zeros(steps, 3*num_animals);
+trajectories = zeros(steps, 4*num_animals);
 time_until_leaving = zeros(num_animals,1); %record time animal exits
 dist_to_closest_mound = zeros(steps, num_animals);
 proximity_to_boundary = zeros(steps, num_animals); 
@@ -180,9 +180,10 @@ for animal = 1:num_animals
     dung_over_time(:,:,animal) = landscape(:,:,3);
 
     % Movement loop
-    animal_x = 3*animal - 2;%These are for indexing trajectories array
+    animal_x = 4*animal - 3;%These are for indexing trajectories array
     animal_y = animal_x + 1;
     animal_z = animal_x + 2;
+    animal_zz = animal_x + 3;
 
     % Random starting position on perimeter of landscape:
     % Pick x or y to start on, other var is 1 or max.
@@ -243,12 +244,12 @@ for animal = 1:num_animals
                 turning_angle = vmrand(pi, 2, 1); %circular normal. vmrand(mean, var, n)
                 d = min(gamrnd(1, 2, 1),max_tumb); %gamma. shape = 1, scale =2
                 tumble_steps(animal) = tumble_steps(animal) + 1;
-                
+                trajectories(t, animal_zz) = 0; 
             else % RUN 
 
                 turning_angle = vmrand(0, 2, 1); %vmrand(mean, var, n)
                 d = min(gamrnd(2, 2, 1),max_run); %gamma. shape = 2, scale =2
-                
+                trajectories(t, animal_zz) = 1;
             end
 
             direction = rem(direction + turning_angle, (2*pi)); % Take remainder so always between [-2*pi, 2*pi]
