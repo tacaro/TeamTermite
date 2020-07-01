@@ -27,14 +27,14 @@ Contents:
     clearvars
     close all
     % random, hexagon, or square? (string)
-    fertilizer_pattern = "hexagon";
+    fertilizer_pattern = "random";
     mound_radius = 3.5; %default 3.5; Can be [0.5, 1.5, 2.5, 3.5, 4.5, 5.5]
     keep_constant = "mounds"; %number of "pixels" or "mounds" or the "fraction_fertile"
     %to be kept constant if mound_radius or xdim or ydim change
     % Number of animals to run? (integer)
-    num_animals = 20;  %set number of animals to walk the Earth
+    num_animals = 500;  %set number of animals to walk the Earth
     % Max steps that each animal is allotted? (integer)
-    steps = 20;
+    steps = 500;
     %Movement strategy options
     %true true is Orit's model, false false is Dan's model.
     able2stop = false; %If true, animals will stop, feed, and end step if they cross a good patch.
@@ -47,12 +47,12 @@ Contents:
 % Grazing parameters
     feed_time = 1; %relative to total movement time (of 1). Affects how dung distributes
     max_feed = 5; %max amount can feed per turn
-    n_memories = 1; % n of steps that animal remembers (for tumble decision)
+    n_memories = 3; % n of steps that animal remembers (for tumble decision)
     
 % Landscape parameters (dimension, # animals, mound placement)
     xdim = 100;
     ydim = 100;
-    boundary = 10; % fertile pixels will not initialize within this many pixels of the edge of the landscape.
+    boundary = 5; % fertile pixels will not initialize within this many pixels of the edge of the landscape.
                   %animals CAN move in the boundary.
     mound_area_Map = containers.Map({0.5, 1.5, 2.5, 3.5, 4.5, 5.5},...
         {1, 9, 21, 37, 69, 97}); %hardcoded from looking at landscapes
@@ -163,7 +163,7 @@ dung_over_time = zeros(xdim, ydim, steps);
 % fourth through sixth columns are second animal, etc. x, y coords then
 % food consumed at that step.
 
-% Trajectories are saved as xpos, ypos, and fullness for each agent.
+% Trajectories are saved as xpos, ypos, fullness, run or tumble for each agent.
 trajectories = zeros(steps, 4*num_animals);
 time_until_leaving = zeros(num_animals,1); %record time animal exits
 dist_to_closest_mound = zeros(steps, num_animals);
@@ -321,43 +321,43 @@ end
 
 
 % Plot fullness through time for each animal
-    hold on
-    for animal = 1:num_animals
-        fullness_level = trajectories(:,3*animal);
-        t_spent = time_until_leaving(animal);
-        plot(1:t_spent, fullness_level(1:t_spent));
-    end
-    xlim([1 steps])
-    ylim([1 max_feed+2])
-    title('fullness through time ');
-    hold off
+%    hold on
+%    for animal = 1:num_animals
+%        fullness_level = trajectories(:,3*animal);
+%        t_spent = time_until_leaving(animal);
+%        plot(1:t_spent, fullness_level(1:t_spent));
+%    end
+%    xlim([1 steps])
+%    ylim([1 max_feed+2])
+%    title('fullness through time ');
+%    hold off
 
 % Distance to nearest edge.
 %{    figure
-    hold on
-    for animal = 1:num_animals
-        plot(1:steps, proximity_to_boundary(:, animal))
+%    hold on
+%    for animal = 1:num_animals
+%        plot(1:steps, proximity_to_boundary(:, animal))
 
-    end
-    title('distance to boundary thru time')
-    hold off
+%    end
+%    title('distance to boundary thru time')
+%    hold off
 %}
 % Plot distance to mound center through time for each animal
-    figure
-    hold on
-    for animal = 1:num_animals
-        plot(1:steps, dist_to_closest_mound(:, animal))
+%    figure
+%    hold on
+%    for animal = 1:num_animals
+%        plot(1:steps, dist_to_closest_mound(:, animal))
 
-    end
-    title('distance to closest mound thru time')
-    hold off
+%    end
+%    title('distance to closest mound thru time')
+%    hold off
 
 % Quantity Plot
     figure, surf(landscape(:,:,1));
     hold on
     zz =transpose(linspace(100,100,length(trajectories(:,2))));
     for animal = 1:num_animals
-        xx = 3*animal - 2;
+        xx = 4*animal - 3;
         yy = xx + 1;
         plot3(trajectories(:,xx,1), trajectories(:,yy,1),zz)
     end
@@ -369,7 +369,7 @@ end
     hold on
     zz =transpose(linspace(100,100,length(trajectories(:,2))));
     for animal = 1:num_animals
-        xx = 3*animal - 2;
+        xx = 4*animal - 3;
         yy = xx + 1;
         plot3(trajectories(:,xx,1), trajectories(:,yy,1),zz)
     end
@@ -381,7 +381,7 @@ end
     surf(landscape(:, :, 3));zz =transpose(linspace(100,100,length(trajectories(:,2))));
     hold on
     for animal = 1:num_animals
-        xx = 3*animal - 2;
+        xx = 4*animal - 3;
         yy = xx + 1;
         plot3(trajectories(:,xx,1), trajectories(:,yy,1),zz)
     end
@@ -396,14 +396,14 @@ landscape_time_bi = landscape_over_time;
 landscape_time_bi=landscape_time_bi > 50;
 
 % Reshape the trajectories matrix to be 3D matrix
-% where there are 3 columns: x, y, and fullness
+% where there are 4 columns: x, y, and fullness, run vs tumble
 % each flat matrix represents a single animal.
-traj = reshape(trajectories, steps+1, 3, num_animals);
+traj = reshape(trajectories, steps+1, 4, num_animals);
 
 % Initialize residency tracking matrix
 residency = zeros(num_animals, 2);
 
-for page = 1:size(traj, 3) % for every page [animal traj] in the 3d matrix
+for page = 1:size(traj, 4) % for every page [animal traj] in the 3d matrix
 
     for line = 1:size(traj, 1) % for every line [coord pair] in the page
         x = traj(line, 1, page); % note the x coord
