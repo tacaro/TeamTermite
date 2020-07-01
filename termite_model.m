@@ -242,11 +242,10 @@ for animal = 1:num_animals
             
             if recent_memory > 3 % TUMBLE
                 turning_angle = vmrand(pi, 2, 1); %circular normal. vmrand(mean, var, n)
-                d = min(gamrnd(1, 2, 1),max_tumb); %gamma. shape = 1, scale =2
+                d = min(gamrnd(1, 2, 1),max_run); %gamma. shape = 1, scale =2. max=max_run
                 tumble_steps(animal) = tumble_steps(animal) + 1;
                 trajectories(t, animal_zz) = 0; 
             else % RUN 
-
                 turning_angle = vmrand(0, 2, 1); %vmrand(mean, var, n)
                 d = min(gamrnd(2, 2, 1),max_run); %gamma. shape = 2, scale =2
                 trajectories(t, animal_zz) = 1;
