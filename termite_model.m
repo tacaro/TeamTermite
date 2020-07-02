@@ -28,7 +28,7 @@ Contents:
     close all
     % random, hexagon, or square? (string)
     fertilizer_pattern = "random";
-    mound_radius = 3.5; %default 3.5; Can be [0.5, 1.5, 2.5, 3.5, 4.5, 5.5]
+    mound_radius = 5.5; %default 3.5; Can be [0.5, 1.5, 2.5, 3.5, 4.5, 5.5]
     keep_constant = "mounds"; %number of "pixels" or "mounds" or the "fraction_fertile"
     %to be kept constant if mound_radius or xdim or ydim change
     % Number of animals to run? (integer)
@@ -50,9 +50,9 @@ Contents:
     n_memories = 3; % n of steps that animal remembers (for tumble decision)
     
 % Landscape parameters (dimension, # animals, mound placement)
-    xdim = 100;
-    ydim = 100;
-    boundary = 5; % fertile pixels will not initialize within this many pixels of the edge of the landscape.
+    xdim = 200;
+    ydim = 200;
+    boundary = 10; % fertile pixels will not initialize within this many pixels of the edge of the landscape.
                   %animals CAN move in the boundary.
     mound_area_Map = containers.Map({0.5, 1.5, 2.5, 3.5, 4.5, 5.5},...
         {1, 9, 21, 37, 69, 97}); %hardcoded from looking at landscapes
@@ -315,8 +315,8 @@ end
 %% Visualization
 
 % Time spent on landscape
-    hist(time_until_leaving,num_animals/5)
-    title('time steps spent in simluation')
+ %   hist(time_until_leaving,num_animals/5)
+    %title('time steps spent in simluation')
 
 
 % Plot fullness through time for each animal
