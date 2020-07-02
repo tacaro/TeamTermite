@@ -27,7 +27,7 @@ Contents:
     clearvars
     close all
     % random, hexagon, or square? (string)
-    fertilizer_pattern = "random";
+    fertilizer_pattern = "hexagon";
     mound_radius = 5.5; %default 3.5; Can be [0.5, 1.5, 2.5, 3.5, 4.5, 5.5]
     keep_constant = "mounds"; %number of "pixels" or "mounds" or the "fraction_fertile"
     %to be kept constant if mound_radius or xdim or ydim change
@@ -52,7 +52,7 @@ Contents:
 % Landscape parameters (dimension, # animals, mound placement)
     xdim = 200;
     ydim = 200;
-    boundary = 10; % fertile pixels will not initialize within this many pixels of the edge of the landscape.
+    boundary = 15; % fertile pixels will not initialize within this many pixels of the edge of the landscape.
                   %animals CAN move in the boundary.
     mound_area_Map = containers.Map({0.5, 1.5, 2.5, 3.5, 4.5, 5.5},...
         {1, 9, 21, 37, 69, 97}); %hardcoded from looking at landscapes
