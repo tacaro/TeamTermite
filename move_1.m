@@ -69,19 +69,25 @@ else
     else
         crossing_array_y = sort(crossing_array(:,2), 'descend');
     end
-    
+
     crossing_array = [crossing_array_x, crossing_array_y];
-    crossing_array = round(crossing_array, 2);
+%{
+    %crossing_array = round(crossing_array, 2);
         %Rounding is to avoid small differences in calculating a duplicate
-        %point in multiple ways from hiding that duplicate point.
-    i_array = sort([2:size(crossing_array, 1)], 'descend');
+        %point in multiple ways from hiding that duplicate point. This
+        %whole section is probably unnecessary, but it is still here in
+        %case errors start to appear, as the code worked fine with this
+        %except in the very rare circumstance that an animal started or
+        %stopped exactly on a grid boundary (n.5000) or crossed a grid
+        %boundary by less than 0.01.
+    i_array = sort([2:size(crossing_array, 1)], 'descend'); 
     for pp = i_array
         if crossing_array(pp, 1) == crossing_array(pp-1, 1) && ...
                 crossing_array(pp, 2) == crossing_array(pp-1, 2)
             crossing_array(pp, :) = [];    
         end
     end
-
+ %}
  
 %Create array of landscape coords of gridsquares crossed, and distance
 %traveled through each square.
@@ -96,12 +102,10 @@ else
         path_array(square, 1) = round( (x_i + x_f) / 2 );
         path_array(square, 2) = round( (y_i + y_f) / 2 );
         path_array(square, 3) = sqrt((x_f - x_i)^2 + (y_f - y_i)^2);
-        
     end
     
 %Divide distances by total distance
-    path_array(:, 3) = path_array(:, 3) / total_distance;
-
+    path_array(:, 3) = path_array(:, 3) / total_distance;         
     
 end
 

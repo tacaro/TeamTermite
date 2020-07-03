@@ -32,7 +32,7 @@ Contents:
     keep_constant = "mounds"; %number of "pixels" or "mounds" or the "fraction_fertile"
     %to be kept constant if mound_radius or xdim or ydim change
     % Number of animals to run? (integer)
-    num_animals = 500;  %set number of animals to walk the Earth
+    num_animals = 1000;  %set number of animals to walk the Earth
     % Max steps that each animal is allotted? (integer)
     steps = 500;
     %Movement strategy options
@@ -164,12 +164,9 @@ dung_over_time = zeros(xdim, ydim, steps);
 % food consumed at that step.
 
 % Trajectories are saved as xpos, ypos, fullness, run or tumble for each agent.
-trajectories = zeros(steps, 4*num_animals);
-time_until_leaving = zeros(num_animals,1); %record time animal exits
+trajectories = nan(steps, 4*num_animals);
 dist_to_closest_mound = zeros(steps, num_animals);
 proximity_to_boundary = zeros(steps, num_animals); 
-fert_steps = zeros(num_animals, 1);
-tumble_steps = zeros(num_animals, 1);
 
 curr_location = zeros(1,2);
 memory = nan(1,n_memories);
@@ -211,7 +208,7 @@ for animal = 1:num_animals
     %initialize. Goes to 1 when animal leaves boundary on landscape.
     leave = 0;
     memory(:) = nan(1,n_memories);
-    %memory(1) is least recent, (n_memories) most recent.
+    %memory(1) is most recent, (n_memories) least recent.
 
     %landscape_over_time = landscape_over_time(:,:,landscape(:,:,1);
 
@@ -235,15 +232,12 @@ for animal = 1:num_animals
             
             %if we want to weight nutrition even further, could * by
             %nutrition again at current location: 
-            
-            %recent_memory = mean(memory) * nutrition
 
             % ** this is where the run vs tumble decision is made
             
             if recent_memory > 3 % TUMBLE
                 turning_angle = vmrand(pi, 2, 1); %circular normal. vmrand(mean, var, n)
                 d = min(gamrnd(1, 2, 1),max_run); %gamma. shape = 1, scale =2. max=max_run
-                tumble_steps(animal) = tumble_steps(animal) + 1;
                 trajectories(t, animal_zz) = 0; 
             else % RUN 
                 turning_angle = vmrand(0, 2, 1); %vmrand(mean, var, n)
@@ -253,12 +247,9 @@ for animal = 1:num_animals
 
             direction = rem(direction + turning_angle, (2*pi)); % Take remainder so always between [-2*pi, 2*pi]
 
-
             % Agent moves
             x2 = x1+d*cos(direction);
             y2 = y1+d*sin(direction);
-
-
 
         % Update landscape and trajectories array
         % returned x2 and y2 will be different from inputs if animal crossed
@@ -266,31 +257,23 @@ for animal = 1:num_animals
         [landscape, grass_consumed, nutrition, x2, y2, leave] = ...
             move_and_feed_1(landscape, x1, y1, x2, y2, max_feed, max_grass, feed_time, stop_food, able2stop);
         if leave == 1
-            for remaining_steps = t+1 : steps+1
-                trajectories(remaining_steps, animal_x : animal_z) = NaN;
-                time_until_leaving(animal) = t - 1;
-            end
             break
             % Ends "t" loop. returns to "animal" loop.
         end
-          
-        
+         
         trajectories(t+1, animal_x : animal_y) = [x2, y2]; %update location
         trajectories(t+1, animal_z) = grass_consumed;
-          
-        %memory(3) = memory(2);, memory(2) = memory(1);, memory(1) = grass_consumed;
         
         %added in a loop here in case  n_memories = 1
         if n_memories > 1
             memory(2:end) = memory(1:(n_memories-1)); 
-            memory(n_memories) = grass_consumed;
+            memory(1) = grass_consumed;
         else 
             memory = grass_consumed;
-        end 
-        
-        
+        end     
         
         % Calculate distance to nearest mound
+        %{
         if mound_radius > 1 %can take a long time to compute
             mound_dists = zeros(n_mounds,1);
             for m = 1:n_mounds
@@ -301,12 +284,10 @@ for animal = 1:num_animals
 
             dist_to_closest_mound(t, animal) = min(mound_dists);
         end
-        %}
         % Calculate distance to nearest boundary
         dist_to_edge = [x2; xdim - x2; y2; ydim - y2];
         proximity_to_boundary(t, animal) = min(dist_to_edge);
-        time_until_leaving(animal) = steps;
-
+        %}
     end  
 end
 
