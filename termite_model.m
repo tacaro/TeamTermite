@@ -28,7 +28,7 @@ Contents:
     close all
     % random, hexagon, or square? (string)
     fertilizer_pattern = "hexagon";
-    mound_radius = 5.5; %default 3.5; Can be [0.5, 1.5, 2.5, 3.5, 4.5, 5.5]
+    mound_radius = 12.5; %Was 3.5 for rotation. Can be [0.5, 1, 13.5] or else mound_area_Map will not know mound_area
     keep_constant = "mounds"; %number of "pixels" or "mounds" or the "fraction_fertile"
     %to be kept constant if mound_radius or xdim or ydim change
     % Number of animals to run? (integer)
@@ -54,8 +54,10 @@ Contents:
     ydim = 200;
     boundary = 15; % fertile pixels will not initialize within this many pixels of the edge of the landscape.
                   %animals CAN move in the boundary.
-    mound_area_Map = containers.Map({0.5, 1.5, 2.5, 3.5, 4.5, 5.5},...
-        {1, 9, 21, 37, 69, 97}); %hardcoded from looking at landscapes
+    mound_area_Map = containers.Map({0.5, 1.5, 2.5, 3.5, 4.5, 5.5, 6.5, 7.5,...
+        8.5, 9.5, 10.5, 11.5, 12.5, 13.5},...
+        {1, 9, 21, 37, 69, 97, 137, 177, 225, 293, 349, 421, 489, 577});
+    %mound_area_Map is hardcoded from looking at landscapes
     mound_area = values(mound_area_Map, {mound_radius});
     mound_area = mound_area{1};        
     
