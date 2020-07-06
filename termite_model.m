@@ -60,7 +60,7 @@ Contents:
     mound_area = mound_area{1};        
     
 % N mounds need to be the same in both landscapes! 
-    n_mounds = 24; % number of termite mounds if randomly placed
+    n_mounds = 16; % number of termite mounds
     %if change n_mounds, change n_pixels below!!!
     max_grass = 100; %starting grass/nutrition level for fertilizer patches
     food_ratio = 5; %ratio of initial grass quantity and nutrition on fertilizered patches vs off
@@ -105,12 +105,8 @@ end
     end
 
 % Parameters for decision-making
-    stay_grass = 30;
-    stay_nutrition = 5;
-    run_nutrition = 3;
-    stop_food = 0.8;
-
-
+tumble_food = 3;
+stop_food = 4;
 
 % Set up fertilizer mound locations, initialize landscape
 if fertilizer_pattern == "hexagon"
@@ -235,7 +231,7 @@ for animal = 1:num_animals
 
             % ** this is where the run vs tumble decision is made
             
-            if recent_memory > 3 % TUMBLE
+            if recent_memory > tumble_food % TUMBLE
                 turning_angle = vmrand(pi, 2, 1); %circular normal. vmrand(mean, var, n)
                 d = min(gamrnd(1, 2, 1),max_run); %gamma. shape = 1, scale =2. max=max_run
                 trajectories(t, animal_zz) = 0; 
@@ -358,7 +354,7 @@ end
 
 
 % Dung Plot
-    surf(landscape(:, :, 3));zz =transpose(linspace(100,100,length(trajectories(:,2))));
+    figure, surf(landscape(:, :, 3));zz =transpose(linspace(100,100,length(trajectories(:,2))));
     hold on
     for animal = 1:num_animals
         xx = 4*animal - 3;
@@ -440,10 +436,6 @@ basename = strcat('dfs/', run_ID, "/", fertilizer_pattern, "_", STRsteps, "_", S
             'min_run', min_run;
             'min_tumb', min_tumb;
             'n_mounds', n_mounds;
-            'stay_grass', stay_grass;
-            'stay_nutrition', stay_nutrition;
-            'run_nutrition', run_nutrition;
-            'stop_food', stop_food;
             'n_memories', n_memories;
             };
       MTDA = cell2table(MTDA, 'VariableNames', {'Parameter', 'Value'});

@@ -33,7 +33,7 @@ function [landscape, grass_consumed, nutrition, x_stop, y_stop, leave] = move_an
 
 
 [path_array, crossing_array] = move_1(x1, y1, x2, y2);
-[path_array, leave, x_stop, y_stop] = check_path(landscape, path_array, crossing_array, max_grass, stop_food, able2stop);
+[path_array, leave, x_stop, y_stop] = check_path(landscape, path_array, crossing_array, max_grass, stop_food, max_feed, able2stop);
 num_squares = size(path_array, 1);
 for square = 1:num_squares
     xx = path_array(square, 1);

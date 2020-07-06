@@ -21,7 +21,7 @@ not make a copy of it. (Otherwise it would be a laborious task for the
 computer)
 %}
 
-function [path_array, leave, x_stop, y_stop] = check_path(landscape, path_array, crossing_array, max_grass, stop_food, able2stop)
+function [path_array, leave, x_stop, y_stop] = check_path(landscape, path_array, crossing_array, max_grass, stop_food, max_feed, able2stop)
 
 num_squares = size(path_array, 1);
 num_crosses = size(crossing_array, 1);
@@ -54,7 +54,7 @@ if able2stop
     for square = 2:num_squares %can't stop in same square as started.
         xx = path_array(square, 1);
         yy = path_array(square, 2);
-        if landscape(yy, xx, 1) * landscape(yy, xx, 2) / max_grass > stop_food %Make this connect to parameters from top of run_and_tumble
+        if max_feed * (landscape(yy, xx, 1) / max_grass) * landscape(yy, xx, 2) > stop_food
             path_array( (square + 1 : num_squares), : ) = [];
             path_array(square, 3) = path_array(square, 3)/2;
             %path_array ends halfway through stopping patch.
