@@ -161,8 +161,10 @@ dung_over_time = zeros(xdim, ydim, steps);
 % fourth through sixth columns are second animal, etc. x, y coords then
 % food consumed at that step.
 
-% Trajectories are saved as xpos, ypos, fullness, run or tumble for each agent.
-trajectories = nan(steps, 4*num_animals);
+% Trajectories are saved as xpos, ypos, grass_consumed, run (1) or tumble (0) for each agent.
+%Note that the first grass_consumed value for each animal will remain nan
+%and final run-tumble value for each animal will remain nan.
+trajectories = nan(steps + 1, 4*num_animals);
 dist_to_closest_mound = zeros(steps, num_animals);
 proximity_to_boundary = zeros(steps, num_animals); 
 
@@ -289,6 +291,26 @@ for animal = 1:num_animals
     end  
 end
 
+
+%{
+%Shorten trajectories array for steps that no animals reached
+longest_trajectory = 0;
+last_step = 1;
+traj_ii = 0;
+for trajectories_animal =  1 : num_animals
+    traj_ii = trajectories_animal * 4 - 3;
+    if ~isnan(trajectories(steps+1, traj_ii))
+        last_step = steps + 1;
+        break
+    else
+        animal_last_step = find(isnan(trajectories(:, traj_ii)), 1) - 1;
+        if animal_last_step > last_step
+            last_step = animal_last_step;
+        end
+    end
+end
+trajectories(last_step + 1 : steps + 1, :) = [];
+%}
 
 
 %% Visualization
