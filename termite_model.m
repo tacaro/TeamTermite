@@ -36,18 +36,32 @@ Contents:
     % Max steps that each animal is allotted? (integer)
     steps = 500;
     %Movement strategy options
-    %true true is Orit's model, false false is Dan's model.
     able2stop = false; %If true, animals will stop, feed, and end step if they cross a good patch.
-    run4ever = false; %if true, there is no max distance traveled while running.
-    random_walk = false; %if true, animals move in a true random walk.
     
 
 %% Model Script
 % Model parameters
 % Grazing parameters
-    feed_time = 1; %relative to total movement time (of 1). Affects how dung distributes
-    max_feed = 5; %max amount can feed per turn
-    n_memories = 3; % n of steps that animal remembers (for tumble decision)
+feed_time = 1; %relative to total movement time (of 1). Affects how dung distributes
+max_feed = 5; %max amount can feed per turn
+    
+% Movement angle/dist parameters.
+% angles are circular normal from vmrand(mean, var)
+% distances are gamma distribution from gamrnd(shape, scale) < max_run
+tum_turn_mean = pi;
+tum_turn_var = 2;
+tum_dist_shape = 1;
+tum_dist_scale = 2;
+run_turn_mean = 0;
+run_turn_var = 2;
+run_dist_shape = 2;
+run_dist_scale = 2;
+max_run = 8;
+
+% Parameters for decision-making
+n_memories = 3; % n of steps that animal remembers (for tumble decision)
+tumble_food = 3;
+stop_food = 4; %used in check_path iff able2stop == TRUE
     
 % Landscape parameters (dimension, # animals, mound placement)
     xdim = 200;
@@ -83,32 +97,6 @@ elseif keep_constant == "fraction_fertile"
 else
     error("Error: keep_constant variable assigned to unrecognized value")
 end
-    
-    
-% Movement angle/dist parameters. 
-%CAN we remove this section below? 
-    max_turn_angle = pi;
-    angle_ratio = 3; %How much less max turn angle is for run than tumble.
-    min_tumb = 0.5; %minimum tumble distance
-    max_tumb = 2; %max tumble dist
-    run_tumb_ratio = 4; %how much longer is run dist than tumble?
-    min_run = min_tumb * run_tumb_ratio;
-    max_run = max_tumb * run_tumb_ratio;
-
-    if run4ever
-        min_run = 2*xdim;
-        max_run = 2*xdim;
-    end
-    if random_walk
-        min_tumb = min_run;
-        max_tumb = max_run;
-        angle_ratio = 1;
-        max_turn_angle = pi;
-    end
-
-% Parameters for decision-making
-tumble_food = 3;
-stop_food = 4;
 
 % Set up fertilizer mound locations, initialize landscape
 if fertilizer_pattern == "hexagon"
@@ -150,7 +138,7 @@ if sum(sum(landscape(:,:,2) == 1)) ~= n_pixels
 end
 
 % Preallocate dataframe to track landscape over time
-landscape_before_run = landscape; % take snapshot of first frame for later reference 
+%landscape_before_run = landscape; % take snapshot of first frame for later reference 
 landscape_over_time = zeros(xdim, ydim, steps);
 dung_over_time = zeros(xdim, ydim, steps);
 
@@ -165,11 +153,8 @@ dung_over_time = zeros(xdim, ydim, steps);
 %Note that the first grass_consumed value for each animal will remain nan
 %and final run-tumble value for each animal will remain nan.
 trajectories = nan(steps + 1, 4*num_animals);
-dist_to_closest_mound = zeros(steps, num_animals);
-proximity_to_boundary = zeros(steps, num_animals); 
-
 curr_location = zeros(1,2);
-memory = nan(1,n_memories);
+memory = nan(n_memories, 1);
 
 for animal = 1:num_animals
     % Take snapshot of landscape, append to landscape_over_time
@@ -209,8 +194,7 @@ for animal = 1:num_animals
     leave = 0;
     memory(:) = nan(1,n_memories);
     %memory(1) is most recent, (n_memories) least recent.
-
-    %landscape_over_time = landscape_over_time(:,:,landscape(:,:,1);
+    
 
     for t=1:steps
 
@@ -225,71 +209,49 @@ for animal = 1:num_animals
 
 % Decide on movement strategy and calculate next location
 
-            % Choose turn size & movement distance
-            %  decision to tumble is a fct of memory, which = food consumed. 
-            % memory is just how much food was eaten the last N time steps
-            recent_memory = nanmean(memory);
-            
-            %if we want to weight nutrition even further, could * by
-            %nutrition again at current location: 
+        % Choose turn size & movement distance
+        %  decision to tumble is a fct of memory, which = food consumed. 
+        % memory is just how much food was eaten the last N time steps
+        recent_memory = nanmean(memory);
 
-            % ** this is where the run vs tumble decision is made
-            
-            if recent_memory > tumble_food % TUMBLE
-                turning_angle = vmrand(pi, 2, 1); %circular normal. vmrand(mean, var, n)
-                d = min(gamrnd(1, 2, 1),max_run); %gamma. shape = 1, scale =2. max=max_run
-                trajectories(t, animal_zz) = 0; 
-            else % RUN 
-                turning_angle = vmrand(0, 2, 1); %vmrand(mean, var, n)
-                d = min(gamrnd(2, 2, 1),max_run); %gamma. shape = 2, scale =2
-                trajectories(t, animal_zz) = 1;
-            end
+        %if we want to weight nutrition even further, could * by
+        %nutrition again at current location: 
 
-            direction = rem(direction + turning_angle, (2*pi)); % Take remainder so always between [-2*pi, 2*pi]
+        % ** this is where the run vs tumble decision is made
+        if recent_memory > tumble_food % TUMBLE
+            turning_angle = vmrand(tum_turn_mean, tum_turn_var, 1); %circular normal. vmrand(mean, var, n)
+            d = min(gamrnd(tum_dist_shape, tum_dist_scale, 1),max_run); %gamma. shape = 1, scale =2. max=max_run
+            trajectories(t, animal_zz) = 0; 
+        else % RUN 
+            turning_angle = vmrand(run_turn_mean, run_turn_var, 1); %vmrand(mean, var, n)
+            d = min(gamrnd(run_dist_shape, run_dist_scale, 1),max_run); %gamma. shape = 2, scale =2
+            trajectories(t, animal_zz) = 1;
+        end
 
-            % Agent moves
-            x2 = x1+d*cos(direction);
-            y2 = y1+d*sin(direction);
+        
+        % Agent moves
+        direction = rem(direction + turning_angle, (2*pi)); % Take remainder so always between [-2*pi, 2*pi]
+        x2 = x1+d*cos(direction);
+        y2 = y1+d*sin(direction);
 
+        
         % Update landscape and trajectories array
         % returned x2 and y2 will be different from inputs if animal crossed
-        % boundary or crossed a good patch and stopped.
+        % landscape boundary or crossed a good patch and stopped (if able2stop).
         [landscape, grass_consumed, nutrition, x2, y2, leave] = ...
             move_and_feed_1(landscape, x1, y1, x2, y2, max_feed, max_grass, feed_time, stop_food, able2stop);
         if leave == 1
             break
             % Ends "t" loop. returns to "animal" loop.
         end
-         
         trajectories(t+1, animal_x : animal_y) = [x2, y2]; %update location
         trajectories(t+1, animal_z) = grass_consumed;
+        memory(2:end) = memory(1:(n_memories-1)); %update memory
+        memory(1) = grass_consumed;
+   
         
-        %added in a loop here in case  n_memories = 1
-        if n_memories > 1
-            memory(2:end) = memory(1:(n_memories-1)); 
-            memory(1) = grass_consumed;
-        else 
-            memory = grass_consumed;
-        end     
-        
-        % Calculate distance to nearest mound
-        %{
-        if mound_radius > 1 %can take a long time to compute
-            mound_dists = zeros(n_mounds,1);
-            for m = 1:n_mounds
-                mound = fertilizer_xy(m,:);
-                pts = [mound; x2,y2];
-                mound_dists(m) = pdist(pts, 'euclidean');
-            end
-
-            dist_to_closest_mound(t, animal) = min(mound_dists);
-        end
-        % Calculate distance to nearest boundary
-        dist_to_edge = [x2; xdim - x2; y2; ydim - y2];
-        proximity_to_boundary(t, animal) = min(dist_to_edge);
-        %}
-    end  
-end
+    end  % t (step) loop
+end % animal loop
 
 
 %{
@@ -314,43 +276,6 @@ trajectories(last_step + 1 : steps + 1, :) = [];
 
 
 %% Visualization
-
-% Time spent on landscape
- %   hist(time_until_leaving,num_animals/5)
-    %title('time steps spent in simluation')
-
-
-% Plot fullness through time for each animal
-%    hold on
-%    for animal = 1:num_animals
-%        fullness_level = trajectories(:,3*animal);
-%        t_spent = time_until_leaving(animal);
-%        plot(1:t_spent, fullness_level(1:t_spent));
-%    end
-%    xlim([1 steps])
-%    ylim([1 max_feed+2])
-%    title('fullness through time ');
-%    hold off
-
-% Distance to nearest edge.
-%{    figure
-%    hold on
-%    for animal = 1:num_animals
-%        plot(1:steps, proximity_to_boundary(:, animal))
-
-%    end
-%    title('distance to boundary thru time')
-%    hold off
-%}
-% Plot distance to mound center through time for each animal
-%    figure
-%    hold on
-%    for animal = 1:num_animals
-%        plot(1:steps, dist_to_closest_mound(:, animal))
-
-%    end
-%    title('distance to closest mound thru time')
-%    hold off
 
 % Quantity Plot
     figure, surf(landscape(:,:,1));
@@ -387,7 +312,6 @@ trajectories(last_step + 1 : steps + 1, :) = [];
     end
     title('dung location pileups');
     hold off
-
 
 
 %% Residency File Creation
@@ -455,10 +379,6 @@ basename = strcat('dfs/', run_ID, "/", fertilizer_pattern, "_", STRsteps, "_", S
             'max_feed', max_feed;
             'max_grass', max_grass;
             'max_run', max_run;
-            'max_tumb', max_tumb;
-            'max_turn_angle', max_turn_angle;
-            'min_run', min_run;
-            'min_tumb', min_tumb;
             'n_mounds', n_mounds;
             'n_memories', n_memories;
             };
@@ -474,9 +394,9 @@ basename = strcat('dfs/', run_ID, "/", fertilizer_pattern, "_", STRsteps, "_", S
     writematrix(landscape(:,:,1), strcat(basename, 'quantity_end.csv')); % quantity
     writematrix(landscape(:,:,2), strcat(basename, 'nutrition_end.csv')); % nutrition
     writematrix(landscape(:,:,3), strcat(basename, 'dung_end.csv')); % dung
-    writematrix(landscape_before_run(:,:,1), strcat(basename, 'quantity_start.csv')); % quantity at start
-    writematrix(landscape_before_run(:,:,2), strcat(basename, 'nutrition_start.csv')); % nutrition at start
-    writematrix(landscape_before_run(:,:,3), strcat(basename, 'dung_start.csv')); % dung at start
+    %writematrix(landscape_before_run(:,:,1), strcat(basename, 'quantity_start.csv')); % quantity at start
+    %writematrix(landscape_before_run(:,:,2), strcat(basename, 'nutrition_start.csv')); % nutrition at start
+    %writematrix(landscape_before_run(:,:,3), strcat(basename, 'dung_start.csv')); % dung at start
 
 % In order to export the three dimensional landscape_over_time matrix in a way that makes sense
 % I'm going to export it as a two dimensional matrix with each slice pasted
