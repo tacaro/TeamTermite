@@ -23,24 +23,14 @@ Contents:
 
 
 %% SET USER-DEFINED PARAMETERS:
-
-    clearvars
-    close all
-    % random, hexagon, or square? (string)
-    fertilizer_pattern = "hexagon";
-    mound_radius = 12.5; %Was 3.5 for rotation. Can be [0.5, 1, 13.5] or else mound_area_Map will not know mound_area
-    keep_constant = "mounds"; %number of "pixels" or "mounds" or the "fraction_fertile"
-    %to be kept constant if mound_radius or xdim or ydim change
-    % Number of animals to run? (integer)
-    num_animals = 1000;  %set number of animals to walk the Earth
-    % Max steps that each animal is allotted? (integer)
-    steps = 500;
-    %Movement strategy options
-    able2stop = false; %If true, animals will stop, feed, and end step if they cross a good patch.
     
+clearvars
+close all
 
-%% Model Script
-% Model parameters
+num_animals = 1000;% Number of animals to run? (integer)
+steps = 500; % Max steps that each animal is allotted? (integer)
+landscape_folder = "landscape01";
+
 % Grazing parameters
 feed_time = 1; %relative to total movement time (of 1). Affects how dung distributes
 max_feed = 5; %max amount can feed per turn
@@ -60,82 +50,25 @@ max_run = 8;
 
 % Parameters for decision-making
 n_memories = 3; % n of steps that animal remembers (for tumble decision)
-tumble_food = 3;
-stop_food = 4; %used in check_path iff able2stop == TRUE
-    
-% Landscape parameters (dimension, # animals, mound placement)
-    xdim = 200;
-    ydim = 200;
-    boundary = 15; % fertile pixels will not initialize within this many pixels of the edge of the landscape.
-                  %animals CAN move in the boundary.
-    mound_area_Map = containers.Map({0.5, 1.5, 2.5, 3.5, 4.5, 5.5, 6.5, 7.5,...
-        8.5, 9.5, 10.5, 11.5, 12.5, 13.5},...
-        {1, 9, 21, 37, 69, 97, 137, 177, 225, 293, 349, 421, 489, 577});
-    %mound_area_Map is hardcoded from looking at landscapes
-    mound_area = values(mound_area_Map, {mound_radius});
-    mound_area = mound_area{1};        
-    
-% N mounds need to be the same in both landscapes! 
-    n_mounds = 16; % number of termite mounds
-    %if change n_mounds, change n_pixels below!!!
-    max_grass = 100; %starting grass/nutrition level for fertilizer patches
-    food_ratio = 5; %ratio of initial grass quantity and nutrition on fertilizered patches vs off
+tumble_food = 0.6 * max_feed;
+stop_food = 0.8 * max_feed; %used in check_path iff able2stop == TRUE
+able2stop = false; %If true, animals will stop, feed, and end step if they cross a good patch.   
 
-    %Allow for different sized patches.
-if keep_constant == "pixels"
-    n_pixels = 888; %Hardcoded from 24 mounds * 37 pixels/mound standard. (radius 3.5)
-                    %Can find other mound areas in mound_area_Map container
-    n_mounds = floor(n_pixels/mound_area);
-    n_pixels_extra = n_pixels - (n_mounds * mound_area);
-elseif keep_constant == "mounds"
-    n_pixels = n_mounds * mound_area;
-    n_pixels_extra = 0;
-elseif keep_constant == "fraction_fertile"
-    n_pixels = round(888 * xdim * ydim / 10^4); %hardcoded from 24 mounds, radius 3.5, 100x100 landscape
-    n_mounds = floor(n_pixels/mound_area);
-    n_pixels_extra = n_pixels - (n_mounds * mound_area);
-else
-    error("Error: keep_constant variable assigned to unrecognized value")
-end
+%% Load landscape
 
-% Set up fertilizer mound locations, initialize landscape
-if fertilizer_pattern == "hexagon"
-    [fertilizer_xy, n_mounds_extra] = hexGrid(xdim, ydim, boundary, mound_radius, n_mounds);   
-   
-elseif fertilizer_pattern == "square"
-    n_mounds_side = floor(sqrt(n_mounds));
-    n_mounds_extra = n_mounds - n_mounds_side^2; 
-    fert_x = linspace((boundary + 1 + floor(mound_radius)), (xdim - boundary - floor(mound_radius)), n_mounds_side);
-    fert_y = linspace((boundary + 1 + floor(mound_radius)), (ydim - boundary - floor(mound_radius)), n_mounds_side);
-    [X,Y] = meshgrid(fert_x, fert_y);
-    fertilizer_xy = round([X(:), Y(:)]);
-    
-elseif fertilizer_pattern == "random"
-    fertilizer_xy = [];
-    fertilizer_xy = random_fertilizer(fertilizer_xy, n_mounds, xdim, ydim, boundary, mound_radius);
-    n_mounds_extra = 0;
+grass_filename = strcat(landscape_folder, "/", landscape_folder, "_", "grass");
+nutrition_filename = strcat(landscape_folder, "/", landscape_folder, "_", "nutrition");
+dung_filename = strcat(landscape_folder, "/", landscape_folder, "_", "dung");
 
-else
-    disp("Exception: Fertilizer pattern not recognized. The options are 'random', 'hexagon', and 'square'")
-    clearvars
-    return
-end  
+grass_initial = csvread(grass_filename);
+nutrition_initial = csvread(nutrition_filename);
+dung_initial = csvread(dung_filename);
 
-%The following 2 if statements maintain a constant number of fertile pixels
-%on the initial landscape when the pattern and mound_radius do not
-%automatically create such a landscape.
-if n_mounds_extra ~= 0  %The circles do not contain a perfect square number of gridspaces, so randomly assign remainder.
-    disp("Extra mounds did not fit in pattern and are randomly distributed.");
-    fertilizer_xy = random_fertilizer(fertilizer_xy, n_mounds_extra, xdim, ydim, boundary, mound_radius);
-end
-landscape = initialize_landscape_1(xdim, ydim, fertilizer_xy, max_grass, food_ratio, mound_radius);
-if n_pixels_extra ~= 0
-    disp("Extra pixels not divided evenly into mounds are randomly distributed.");
-    landscape = add_fertile_pixels(landscape, n_pixels_extra, boundary, max_grass);
-end
-if sum(sum(landscape(:,:,2) == 1)) ~= n_pixels
-    error("Error: Landscape intialized with incorrect number of fertile spaces");
-end
+landscape = cat(3, grass_initial, nutrition_initial, dung_initial);
+
+xdim = size(landscape(:,:,1), 2); %the model uses these parameters
+ydim = size(landscape(:,:,1), 1);
+max_grass = max(max(landscape(:,:,1)));
 
 % Preallocate dataframe to track landscape over time
 %landscape_before_run = landscape; % take snapshot of first frame for later reference 
@@ -254,8 +187,7 @@ for animal = 1:num_animals
 end % animal loop
 
 
-%{
-%Shorten trajectories array for steps that no animals reached
+%Shorten trajectories array for steps that no animals reached (save memory)
 longest_trajectory = 0;
 last_step = 1;
 traj_ii = 0;
@@ -272,7 +204,7 @@ for trajectories_animal =  1 : num_animals
     end
 end
 trajectories(last_step + 1 : steps + 1, :) = [];
-%}
+
 
 
 %% Visualization
