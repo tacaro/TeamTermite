@@ -5,7 +5,7 @@
 clearvars
 close all
 
-fertilizer_pattern = "random"; % random, hexagon, or square? (string)
+fertilizer_pattern = "hexagon"; % random, hexagon, or square? (string)
 mound_radius = 12.5; %Was 3.5 for rotation. Can be [0.5, 1, 13.5] or else mound_area_Map will not know mound_area
 keep_constant = "mounds"; %number of "pixels" or "mounds" or the "fraction_fertile"
 %to be kept constant if mound_radius or xdim or ydim change

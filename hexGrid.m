@@ -20,6 +20,8 @@ ydim/(y_per_side + 0.5)
 
 mound_radius = floor(mound_radius);
 cos30 = sqrt(3)/2;
+landscape_x = xdim;
+landscape_y = ydim;
 %xdim and y dim zoomed inside of boundary. The (-1) accounts for the first
 %mound centers being on the edge of the allowed region.
 xdim = xdim - 2*boundary - 2*mound_radius - 1;
@@ -68,6 +70,17 @@ XX = XX + boundary + mound_radius + 1;
 
 
 hexCoords = round([XX(:), YY(:)]);
+
+%Center mounds on center of landscape
+left_gap = min(hexCoords(:, 1));
+right_gap = landscape_x - max(hexCoords(:, 1));
+offcenter_x = right_gap - left_gap;
+top_gap = min(hexCoords(:, 2));
+bottom_gap = landscape_y - max(hexCoords(:, 2));
+offcenter_y = bottom_gap - top_gap;
+
+hexCoords(:, 1) = hexCoords(:, 1) + floor(offcenter_x/2);
+hexCoords(:, 2) = hexCoords(:, 2) + floor(offcenter_y/2);
 
 end
 
