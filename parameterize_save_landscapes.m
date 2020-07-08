@@ -86,10 +86,15 @@ end
 
 %% Data Export
 
+%Adjust working directory for local computer.
+wd = 'Rotations and Reading/Doak Rotation/TeamTermite/'; 
+
 now = num2str(fix(clock));
 now = now(~isspace(now));
-uniqueID = strcat(num2str(ii), now);
+runID = 1;
+uniqueID = strcat(num2str(runID), "_", now);
 
+%This is all the parameters.
 fertilizer_pattern;
 radiusSTR = num2str(mound_radius);
 keep_constant;
@@ -100,11 +105,36 @@ n_moundsSTR = num2str(n_mounds);
 max_grassSTR = num2str(max_grass);
 food_ratioSTR = num2str(food_ratio);
 
-parameter_str = strcat(fertilizer_pattern, "_rad", radiusSTR, "_dim", xdimSTR, ...
-    ydimSTR, "_mounds", n_moundsSTR, "_grass", max_grassSTR, "_rat", food_ratioSTR);
+parameter_str = strcat(fertilizer_pattern, "_mounds", n_moundsSTR, "_rad", radiusSTR, "_dim", xdimSTR, ...
+    ydimSTR);
 
-parameter_folder_name = strcat('Rotations and Reading/Doak Rotation/TeamTermite/landscapes'
-if ~exist(
-mkdir('Rotations and Reading/Doak Rotation/TeamTermite/landscapes', parameter_str)
-%writematrix(landscape(:,:,1), strcat(basename, 'test.csv'));
+parameter_folder_name = strcat(wd, 'landscapes/', parameter_str, "/");
+if ~exist(parameter_folder_name, 'dir')
+    mkdir(parameter_folder_name);
+end
 
+landscape_folder_name = strcat(parameter_folder_name, uniqueID, "/");
+if ~exist(landscape_folder_name, 'dir')
+    mkdir(landscape_folder_name);
+else
+    error('A landscape already exists with this ID');
+end
+
+writematrix(landscape(:,:,1), strcat(landscape_folder_name, 'grass.csv'));
+%writematrix(landscape(:,:,2), strcat(landscape_folder_name, 'nutrition.csv'));
+%writematrix(landscape(:,:,3), strcat(landscape_folder_name, 'dung.csv'));
+
+writematrix(fertilizer_xy, strcat(landscape_folder_name, 'fertilizer_xy.csv'));
+
+MTDA = {'landscape_ID', uniqueID;
+            'fertilizer_pattern', fertilizer_pattern;
+            'mound_radius', mound_radius;
+            'xdim', xdim;
+            'ydim', ydim;
+            'food_ratio', food_ratio;
+            'boundary', boundary;
+            'max_grass', max_grass;
+            'n_mounds', n_mounds;
+            };
+  MTDA = cell2table(MTDA, 'VariableNames', {'Parameter', 'Value'});
+  writetable(MTDA, strcat(landscape_folder_name, 'metadata.csv'));

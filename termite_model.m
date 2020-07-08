@@ -29,7 +29,7 @@ close all
 
 num_animals = 1000;% Number of animals to run? (integer)
 steps = 500; % Max steps that each animal is allotted? (integer)
-landscape_folder = "landscape01";
+landscape_folder = "1_20207892235";
 
 % Grazing parameters
 feed_time = 1; %relative to total movement time (of 1). Affects how dung distributes
@@ -55,20 +55,20 @@ stop_food = 0.8 * max_feed; %used in check_path iff able2stop == TRUE
 able2stop = false; %If true, animals will stop, feed, and end step if they cross a good patch.   
 
 %% Load landscape
+grass_filename = strcat(landscape_folder, "/grass.csv");
+%nutrition_filename = strcat(landscape_folder, "nutrition.csv");
+%dung_filename = strcat(landscape_folder, "dung.csv");
 
-grass_filename = strcat(landscape_folder, "/", landscape_folder, "_", "grass");
-nutrition_filename = strcat(landscape_folder, "/", landscape_folder, "_", "nutrition");
-dung_filename = strcat(landscape_folder, "/", landscape_folder, "_", "dung");
+grass_initial = readmatrix(grass_filename);
+%nutrition_initial = readmatrix(nutrition_filename);
+%dung_initial = readmatrix(dung_filename);
 
-grass_initial = csvread(grass_filename);
-nutrition_initial = csvread(nutrition_filename);
-dung_initial = csvread(dung_filename);
-
+xdim = size(grass_initial, 2); %the model uses these parameters
+ydim = size(grass_initial, 1);
+max_grass = max(max(grass_initial));
+nutrition_initial = grass_initial/max_grass;
+dung_initial = zeros(ydim, xdim);
 landscape = cat(3, grass_initial, nutrition_initial, dung_initial);
-
-xdim = size(landscape(:,:,1), 2); %the model uses these parameters
-ydim = size(landscape(:,:,1), 1);
-max_grass = max(max(landscape(:,:,1)));
 
 % Preallocate dataframe to track landscape over time
 %landscape_before_run = landscape; % take snapshot of first frame for later reference 
@@ -304,14 +304,12 @@ basename = strcat('dfs/', run_ID, "/", fertilizer_pattern, "_", STRsteps, "_", S
 % Output metadata file
     % Create a cell array containing useful simulation parameters
     MTDA = {'run_ID', run_ID;
-            'fertilizer_pattern', fertilizer_pattern;
+            'landscape_ID', landscape_folder;
             'max_steps', steps;
             'num_animals', num_animals;
-            'food_ratio', food_ratio;
             'max_feed', max_feed;
             'max_grass', max_grass;
             'max_run', max_run;
-            'n_mounds', n_mounds;
             'n_memories', n_memories;
             };
       MTDA = cell2table(MTDA, 'VariableNames', {'Parameter', 'Value'});
