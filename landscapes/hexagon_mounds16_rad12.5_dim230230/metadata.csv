@@ -1,0 +1,9 @@
+Parameter,Value
+fertilizer_pattern,hexagon
+mound_radius,12.5
+xdim,230
+ydim,230
+food_ratio,5
+boundary,15
+max_grass,100
+n_mounds,16

@@ -6,12 +6,12 @@ clearvars
 close all
 
 fertilizer_pattern = "random"; % random, hexagon, or square? (string)
-mound_radius = 5.5; %Was 3.5 for rotation. Can be [0.5, 1, 13.5] or else mound_area_Map will not know mound_area
+mound_radius = 12.5; %Was 3.5 for rotation. Can be [0.5, 1, 13.5] or else mound_area_Map will not know mound_area
 keep_constant = "mounds"; %number of "pixels" or "mounds" or the "fraction_fertile"
 %to be kept constant if mound_radius or xdim or ydim change
-xdim = 260;
-ydim = 260;
-boundary = 30; % fertile pixels will not initialize within this many pixels of the edge of the landscape.
+xdim = 230;
+ydim = 230;
+boundary = 15; % fertile pixels will not initialize within this many pixels of the edge of the landscape.
               %animals CAN move in the boundary.
 n_mounds = 16; % number of termite mounds
 %if change n_mounds, change n_pixels below!!!
@@ -48,7 +48,7 @@ end
 alphabet = 'A':'Z';
 [first_letter, second_letter] = meshgrid(alphabet, alphabet); 
 
-for scape_num = 1:45
+%for scape_num = 1:45
 
     % Set up fertilizer mound locations, initialize landscape
     if fertilizer_pattern == "hexagon"
@@ -73,6 +73,9 @@ for scape_num = 1:45
         return
     end  
 
+    %manual input of experimental values
+    fertilizer_xy = 2 * [1	2	12	23	42	46	57	71	89	25	43	57	77	90	102	105; ...
+19	37	1	45	4	37	35	36	32	64	56	94	81	75	74	99]' + boundary;
     %The following 2 if statements maintain a constant number of fertile pixels
     %on the initial landscape when the pattern and mound_radius do not
     %automatically create such a landscape.
@@ -86,9 +89,10 @@ for scape_num = 1:45
         landscape = add_fertile_pixels(landscape, n_pixels_extra, boundary, max_grass);
     end
     if sum(sum(landscape(:,:,2) == 1)) ~= n_pixels
-        error("Error: Landscape intialized with incorrect number of fertile spaces");
+       % error("Error: Landscape intialized with incorrect number of fertile spaces");
     end
-
+ 
+    
 
     %% Data Export
 
@@ -96,11 +100,15 @@ for scape_num = 1:45
     wd = 'Rotations and Reading/Doak Rotation/TeamTermite/'; 
 
     %Create unique ID for unique landscapes.
+    
     now = num2str(fix(clock));
     now = now(~isspace(now));
     now(1:4) = [];
-    runID = strcat(first_letter(scape_num), second_letter(scape_num));
-    landscape_ID = strcat(runID, '_', now);
+    %runID = strcat(first_letter(scape_num), second_letter(scape_num));
+    %landscape_ID = strcat(runID, '_', now);
+    
+    landscape_ID = strcat('plot7_', now);
+    
 
     %This is all the parameters.
     fertilizer_pattern;
@@ -117,9 +125,9 @@ for scape_num = 1:45
         ydimSTR);
 
     parameter_folder_name = strcat(wd, 'landscapes/', parameter_str, "/");
+    landscape_path = strcat(parameter_folder_name, 'landscapes/');
+    fertilizer_path = strcat(parameter_folder_name, 'fertilizer_xy/');
     if ~exist(parameter_folder_name, 'dir')
-        landscape_path = strcat(parameter_folder_name, 'landscapes/');
-        fertilizer_path = strcat(parameter_folder_name, 'fertilizer_xy/');
         mkdir(parameter_folder_name);
         mkdir(landscape_path);
         mkdir(fertilizer_path);
@@ -147,4 +155,4 @@ for scape_num = 1:45
 
         writematrix(fertilizer_xy, strcat(fertilizer_path, landscape_ID, '_fertilizer_xy.csv'));
     end
-end
+%end

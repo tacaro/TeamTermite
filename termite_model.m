@@ -32,7 +32,7 @@ truncate_trajectories = true; %truncate rows (steps) of trajectories array that 
 
 num_animals = 1000;% Number of animals to run? (integer)
 steps = 500; % Max steps that each animal is allotted? (integer)
-landscape_ID = "AB_7910926";
+landscape_ID = "plot7_79105421";
 
 % Grazing parameters
 feed_time = 1; %relative to total movement time (of 1). Affects how dung distributes
