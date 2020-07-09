@@ -27,6 +27,9 @@ Contents:
 clearvars
 close all
 
+visualize = false; %automatically generate final landscapes with trajectories paths
+truncate_trajectories = true; %truncate rows (steps) of trajectories array that no animals reached
+
 num_animals = 1000;% Number of animals to run? (integer)
 steps = 500; % Max steps that each animal is allotted? (integer)
 landscape_folder = "1_20207892235";
@@ -53,6 +56,7 @@ n_memories = 3; % n of steps that animal remembers (for tumble decision)
 tumble_food = 0.6 * max_feed;
 stop_food = 0.8 * max_feed; %used in check_path iff able2stop == TRUE
 able2stop = false; %If true, animals will stop, feed, and end step if they cross a good patch.   
+
 
 %% Load landscape
 grass_filename = strcat(landscape_folder, "/grass.csv");
@@ -188,27 +192,29 @@ end % animal loop
 
 
 %Shorten trajectories array for steps that no animals reached (save memory)
-longest_trajectory = 0;
-last_step = 1;
-traj_ii = 0;
-for trajectories_animal =  1 : num_animals
-    traj_ii = trajectories_animal * 4 - 3;
-    if ~isnan(trajectories(steps+1, traj_ii))
-        last_step = steps + 1;
-        break
-    else
-        animal_last_step = find(isnan(trajectories(:, traj_ii)), 1) - 1;
-        if animal_last_step > last_step
-            last_step = animal_last_step;
+if truncate_trajectories
+    longest_trajectory = 0;
+    last_step = 1;
+    traj_ii = 0;
+    for trajectories_animal =  1 : num_animals
+        traj_ii = trajectories_animal * 4 - 3;
+        if ~isnan(trajectories(steps+1, traj_ii))
+            last_step = steps + 1;
+            break
+        else
+            animal_last_step = find(isnan(trajectories(:, traj_ii)), 1) - 1;
+            if animal_last_step > last_step
+                last_step = animal_last_step;
+            end
         end
     end
+    trajectories(last_step + 1 : steps + 1, :) = [];
 end
-trajectories(last_step + 1 : steps + 1, :) = [];
 
 
 
 %% Visualization
-
+if visualize
 % Quantity Plot
     figure, surf(landscape(:,:,1));
     hold on
@@ -244,7 +250,7 @@ trajectories(last_step + 1 : steps + 1, :) = [];
     end
     title('dung location pileups');
     hold off
-
+end
 
 %% Residency File Creation
 
