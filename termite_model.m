@@ -32,7 +32,7 @@ truncate_trajectories = true; %truncate rows (steps) of trajectories array that 
 
 num_animals = 1000;% Number of animals to run? (integer)
 steps = 500; % Max steps that each animal is allotted? (integer)
-landscape_folder = "1_20207892235";
+landscape_ID = "AB_7910926";
 
 % Grazing parameters
 feed_time = 1; %relative to total movement time (of 1). Affects how dung distributes
@@ -59,9 +59,9 @@ able2stop = false; %If true, animals will stop, feed, and end step if they cross
 
 
 %% Load landscape
-grass_filename = strcat(landscape_folder, "/grass.csv");
-%nutrition_filename = strcat(landscape_folder, "nutrition.csv");
-%dung_filename = strcat(landscape_folder, "dung.csv");
+grass_filename = strcat(landscape_ID, "_grass.csv");
+%nutrition_filename = strcat(landscape_ID, "_nutrition.csv");
+%dung_filename = strcat(landscape_ID, "_dung.csv");
 
 grass_initial = readmatrix(grass_filename);
 %nutrition_initial = readmatrix(nutrition_filename);
@@ -310,7 +310,7 @@ basename = strcat('dfs/', run_ID, "/", fertilizer_pattern, "_", STRsteps, "_", S
 % Output metadata file
     % Create a cell array containing useful simulation parameters
     MTDA = {'run_ID', run_ID;
-            'landscape_ID', landscape_folder;
+            'landscape_ID', landscape_ID;
             'max_steps', steps;
             'num_animals', num_animals;
             'max_feed', max_feed;

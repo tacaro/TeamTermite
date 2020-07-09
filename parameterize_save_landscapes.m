@@ -5,13 +5,13 @@
 clearvars
 close all
 
-fertilizer_pattern = "hexagon"; % random, hexagon, or square? (string)
-mound_radius = 12.5; %Was 3.5 for rotation. Can be [0.5, 1, 13.5] or else mound_area_Map will not know mound_area
+fertilizer_pattern = "random"; % random, hexagon, or square? (string)
+mound_radius = 5.5; %Was 3.5 for rotation. Can be [0.5, 1, 13.5] or else mound_area_Map will not know mound_area
 keep_constant = "mounds"; %number of "pixels" or "mounds" or the "fraction_fertile"
 %to be kept constant if mound_radius or xdim or ydim change
-xdim = 200;
-ydim = 200;
-boundary = 15; % fertile pixels will not initialize within this many pixels of the edge of the landscape.
+xdim = 260;
+ydim = 260;
+boundary = 30; % fertile pixels will not initialize within this many pixels of the edge of the landscape.
               %animals CAN move in the boundary.
 n_mounds = 16; % number of termite mounds
 %if change n_mounds, change n_pixels below!!!
@@ -44,97 +44,107 @@ else
     error("Error: keep_constant variable assigned to unrecognized value")
 end
 
-% Set up fertilizer mound locations, initialize landscape
-if fertilizer_pattern == "hexagon"
-    [fertilizer_xy, n_mounds_extra] = hexGrid(xdim, ydim, boundary, mound_radius, n_mounds);   
-   
-elseif fertilizer_pattern == "square"
-    n_mounds_side = floor(sqrt(n_mounds));
-    n_mounds_extra = n_mounds - n_mounds_side^2; 
-    fert_x = linspace((boundary + 1 + floor(mound_radius)), (xdim - boundary - floor(mound_radius)), n_mounds_side);
-    fert_y = linspace((boundary + 1 + floor(mound_radius)), (ydim - boundary - floor(mound_radius)), n_mounds_side);
-    [X,Y] = meshgrid(fert_x, fert_y);
-    fertilizer_xy = round([X(:), Y(:)]);
-    
-elseif fertilizer_pattern == "random"
-    fertilizer_xy = [];
-    fertilizer_xy = random_fertilizer(fertilizer_xy, n_mounds, xdim, ydim, boundary, mound_radius);
-    n_mounds_extra = 0;
+%Create a meshgrid to make 2-letter identifiers for unique landscapes
+alphabet = 'A':'Z';
+[first_letter, second_letter] = meshgrid(alphabet, alphabet); 
 
-else
-    disp("Exception: Fertilizer pattern not recognized. The options are 'random', 'hexagon', and 'square'")
-    clearvars
-    return
-end  
+for scape_num = 1:45
 
-%The following 2 if statements maintain a constant number of fertile pixels
-%on the initial landscape when the pattern and mound_radius do not
-%automatically create such a landscape.
-if n_mounds_extra ~= 0  %The circles do not contain a perfect square number of gridspaces, so randomly assign remainder.
-    disp("Extra mounds did not fit in pattern and are randomly distributed.");
-    fertilizer_xy = random_fertilizer(fertilizer_xy, n_mounds_extra, xdim, ydim, boundary, mound_radius);
+    % Set up fertilizer mound locations, initialize landscape
+    if fertilizer_pattern == "hexagon"
+        [fertilizer_xy, n_mounds_extra] = hexGrid(xdim, ydim, boundary, mound_radius, n_mounds);   
+
+    elseif fertilizer_pattern == "square"
+        n_mounds_side = floor(sqrt(n_mounds));
+        n_mounds_extra = n_mounds - n_mounds_side^2; 
+        fert_x = linspace((boundary + 1 + floor(mound_radius)), (xdim - boundary - floor(mound_radius)), n_mounds_side);
+        fert_y = linspace((boundary + 1 + floor(mound_radius)), (ydim - boundary - floor(mound_radius)), n_mounds_side);
+        [X,Y] = meshgrid(fert_x, fert_y);
+        fertilizer_xy = round([X(:), Y(:)]);
+
+    elseif fertilizer_pattern == "random"
+        fertilizer_xy = [];
+        fertilizer_xy = random_fertilizer(fertilizer_xy, n_mounds, xdim, ydim, boundary, mound_radius);
+        n_mounds_extra = 0;
+
+    else
+        disp("Exception: Fertilizer pattern not recognized. The options are 'random', 'hexagon', and 'square'")
+        clearvars
+        return
+    end  
+
+    %The following 2 if statements maintain a constant number of fertile pixels
+    %on the initial landscape when the pattern and mound_radius do not
+    %automatically create such a landscape.
+    if n_mounds_extra ~= 0  %The circles do not contain a perfect square number of gridspaces, so randomly assign remainder.
+        disp("Extra mounds did not fit in pattern and are randomly distributed.");
+        fertilizer_xy = random_fertilizer(fertilizer_xy, n_mounds_extra, xdim, ydim, boundary, mound_radius);
+    end
+    landscape = initialize_landscape_1(xdim, ydim, fertilizer_xy, max_grass, food_ratio, mound_radius);
+    if n_pixels_extra ~= 0
+        disp("Extra pixels not divided evenly into mounds are randomly distributed.");
+        landscape = add_fertile_pixels(landscape, n_pixels_extra, boundary, max_grass);
+    end
+    if sum(sum(landscape(:,:,2) == 1)) ~= n_pixels
+        error("Error: Landscape intialized with incorrect number of fertile spaces");
+    end
+
+
+    %% Data Export
+
+    %Adjust working directory for local computer.
+    wd = 'Rotations and Reading/Doak Rotation/TeamTermite/'; 
+
+    %Create unique ID for unique landscapes.
+    now = num2str(fix(clock));
+    now = now(~isspace(now));
+    now(1:4) = [];
+    runID = strcat(first_letter(scape_num), second_letter(scape_num));
+    landscape_ID = strcat(runID, '_', now);
+
+    %This is all the parameters.
+    fertilizer_pattern;
+    radiusSTR = num2str(mound_radius);
+    keep_constant;
+    xdimSTR = num2str(xdim);
+    ydimSTR = num2str(ydim);
+    boundarySTR = num2str(boundary);
+    n_moundsSTR = num2str(n_mounds);
+    max_grassSTR = num2str(max_grass);
+    food_ratioSTR = num2str(food_ratio);
+
+    parameter_str = strcat(fertilizer_pattern, "_mounds", n_moundsSTR, "_rad", radiusSTR, "_dim", xdimSTR, ...
+        ydimSTR);
+
+    parameter_folder_name = strcat(wd, 'landscapes/', parameter_str, "/");
+    if ~exist(parameter_folder_name, 'dir')
+        landscape_path = strcat(parameter_folder_name, 'landscapes/');
+        fertilizer_path = strcat(parameter_folder_name, 'fertilizer_xy/');
+        mkdir(parameter_folder_name);
+        mkdir(landscape_path);
+        mkdir(fertilizer_path);
+
+        MTDA = {'fertilizer_pattern', fertilizer_pattern;
+                'mound_radius', mound_radius;
+                'xdim', xdim;
+                'ydim', ydim;
+                'food_ratio', food_ratio;
+                'boundary', boundary;
+                'max_grass', max_grass;
+                'n_mounds', n_mounds;
+                };
+      MTDA = cell2table(MTDA, 'VariableNames', {'Parameter', 'Value'});
+      writetable(MTDA, strcat(parameter_folder_name, 'metadata.csv'));
+
+    end
+
+    if exist(strcat(landscape_path, landscape_ID, '_grass.csv'), 'file')
+        error('A landscape already exists with this ID');
+    else
+        writematrix(landscape(:,:,1), strcat(landscape_path, landscape_ID, '_grass.csv'));
+        %writematrix(landscape(:,:,2), strcat(landscape_path, landscape_ID, '_nutrition.csv'));
+        %writematrix(landscape(:,:,3), strcat(landscape_path, landscape_ID, '_dung.csv'));
+
+        writematrix(fertilizer_xy, strcat(fertilizer_path, landscape_ID, '_fertilizer_xy.csv'));
+    end
 end
-landscape = initialize_landscape_1(xdim, ydim, fertilizer_xy, max_grass, food_ratio, mound_radius);
-if n_pixels_extra ~= 0
-    disp("Extra pixels not divided evenly into mounds are randomly distributed.");
-    landscape = add_fertile_pixels(landscape, n_pixels_extra, boundary, max_grass);
-end
-if sum(sum(landscape(:,:,2) == 1)) ~= n_pixels
-    error("Error: Landscape intialized with incorrect number of fertile spaces");
-end
-
-
-%% Data Export
-
-%Adjust working directory for local computer.
-wd = 'Rotations and Reading/Doak Rotation/TeamTermite/'; 
-
-now = num2str(fix(clock));
-now = now(~isspace(now));
-runID = 1;
-uniqueID = strcat(num2str(runID), "_", now);
-
-%This is all the parameters.
-fertilizer_pattern;
-radiusSTR = num2str(mound_radius);
-keep_constant;
-xdimSTR = num2str(xdim);
-ydimSTR = num2str(ydim);
-boundarySTR = num2str(boundary);
-n_moundsSTR = num2str(n_mounds);
-max_grassSTR = num2str(max_grass);
-food_ratioSTR = num2str(food_ratio);
-
-parameter_str = strcat(fertilizer_pattern, "_mounds", n_moundsSTR, "_rad", radiusSTR, "_dim", xdimSTR, ...
-    ydimSTR);
-
-parameter_folder_name = strcat(wd, 'landscapes/', parameter_str, "/");
-if ~exist(parameter_folder_name, 'dir')
-    mkdir(parameter_folder_name);
-end
-
-landscape_folder_name = strcat(parameter_folder_name, uniqueID, "/");
-if ~exist(landscape_folder_name, 'dir')
-    mkdir(landscape_folder_name);
-else
-    error('A landscape already exists with this ID');
-end
-
-writematrix(landscape(:,:,1), strcat(landscape_folder_name, 'grass.csv'));
-%writematrix(landscape(:,:,2), strcat(landscape_folder_name, 'nutrition.csv'));
-%writematrix(landscape(:,:,3), strcat(landscape_folder_name, 'dung.csv'));
-
-writematrix(fertilizer_xy, strcat(landscape_folder_name, 'fertilizer_xy.csv'));
-
-MTDA = {'landscape_ID', uniqueID;
-            'fertilizer_pattern', fertilizer_pattern;
-            'mound_radius', mound_radius;
-            'xdim', xdim;
-            'ydim', ydim;
-            'food_ratio', food_ratio;
-            'boundary', boundary;
-            'max_grass', max_grass;
-            'n_mounds', n_mounds;
-            };
-  MTDA = cell2table(MTDA, 'VariableNames', {'Parameter', 'Value'});
-  writetable(MTDA, strcat(landscape_folder_name, 'metadata.csv'));
