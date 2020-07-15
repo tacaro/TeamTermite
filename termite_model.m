@@ -27,10 +27,10 @@ Contents:
 clearvars
 close all
 
-visualize = false; %automatically generate final landscapes with trajectories paths
-truncate_trajectories = true; %truncate rows (steps) of trajectories array that no animals reached
+visualize = false; % automatically v final landscapes with trajectories paths
+truncate_trajectories = true; % truncate rows (steps) of trajectories array that no animals reached
 
-num_animals = 1000;% Number of animals to run? (integer)
+num_animals = 1000; % Number of animals to run? (integer)
 steps = 500; % Max steps that each animal is allotted? (integer)
 landscape_ID = "plot7_79105421";
 
@@ -41,33 +41,33 @@ max_feed = 5; %max amount can feed per turn
 % Movement angle/dist parameters.
 % angles are circular normal from vmrand(mean, var)
 % distances are gamma distribution from gamrnd(shape, scale) < max_run
-tum_turn_mean = pi;
-tum_turn_var = 2;
+tum_turn_mean = pi; % mean tumble
+tum_turn_var = 2; % fKappa tumble
 tum_dist_shape = 1;
 tum_dist_scale = 2;
-run_turn_mean = 0;
-run_turn_var = 2;
-run_dist_shape = 2;
+run_turn_mean = 0; % mean run
+run_turn_var = 2; % fKappa run
+run_dist_shape = 2; 
 run_dist_scale = 2;
 max_run = 8;
 
 % Parameters for decision-making
 n_memories = 3; % n of steps that animal remembers (for tumble decision)
 tumble_food = 0.6 * max_feed;
-stop_food = 0.8 * max_feed; %used in check_path iff able2stop == TRUE
-able2stop = false; %If true, animals will stop, feed, and end step if they cross a good patch.   
+stop_food = 0.8 * max_feed; % used in check_path iff able2stop == TRUE
+able2stop = false; % If true, animals will stop, feed, and end step if they cross a good patch.   
 
 
 %% Load landscape
 grass_filename = strcat(landscape_ID, "_grass.csv");
-%nutrition_filename = strcat(landscape_ID, "_nutrition.csv");
-%dung_filename = strcat(landscape_ID, "_dung.csv");
+% nutrition_filename = strcat(landscape_ID, "_nutrition.csv");
+% dung_filename = strcat(landscape_ID, "_dung.csv");
 
 grass_initial = readmatrix(grass_filename);
-%nutrition_initial = readmatrix(nutrition_filename);
-%dung_initial = readmatrix(dung_filename);
+% nutrition_initial = readmatrix(nutrition_filename);
+% dung_initial = readmatrix(dung_filename);
 
-xdim = size(grass_initial, 2); %the model uses these parameters
+xdim = size(grass_initial, 2); % the model uses these parameters
 ydim = size(grass_initial, 1);
 max_grass = max(max(grass_initial));
 nutrition_initial = grass_initial/max_grass;
@@ -75,20 +75,20 @@ dung_initial = zeros(ydim, xdim);
 landscape = cat(3, grass_initial, nutrition_initial, dung_initial);
 
 % Preallocate dataframe to track landscape over time
-%landscape_before_run = landscape; % take snapshot of first frame for later reference 
+% landscape_before_run = landscape; % take snapshot of first frame for later reference 
 landscape_over_time = zeros(xdim, ydim, steps);
 dung_over_time = zeros(xdim, ydim, steps);
 
 %%
-%STEP 2: agents move through landscape.
+% STEP 2: agents move through landscape.
 
 % Record trajectory of all animals. First three columns are first animal,
 % fourth through sixth columns are second animal, etc. x, y coords then
 % food consumed at that step.
 
 % Trajectories are saved as xpos, ypos, grass_consumed, run (1) or tumble (0) for each agent.
-%Note that the first grass_consumed value for each animal will remain nan
-%and final run-tumble value for each animal will remain nan.
+% Note that the first grass_consumed value for each animal will remain nan
+% and final run-tumble value for each animal will remain nan.
 trajectories = nan(steps + 1, 4*num_animals);
 curr_location = zeros(1,2);
 memory = nan(n_memories, 1);
@@ -151,13 +151,13 @@ for animal = 1:num_animals
         % memory is just how much food was eaten the last N time steps
         recent_memory = nanmean(memory);
 
-        %if we want to weight nutrition even further, could * by
-        %nutrition again at current location: 
+        % If we want to weight nutrition even further, could * by
+        % nutrition again at current location: 
 
-        % ** this is where the run vs tumble decision is made
+        % This is where the run vs tumble decision is made
         if recent_memory > tumble_food % TUMBLE
-            turning_angle = vmrand(tum_turn_mean, tum_turn_var, 1); %circular normal. vmrand(mean, var, n)
-            d = min(gamrnd(tum_dist_shape, tum_dist_scale, 1),max_run); %gamma. shape = 1, scale =2. max=max_run
+            turning_angle = vmrand(tum_turn_mean, tum_turn_var, 1); % Circular normal. vmrand(mean, var, n)
+            d = min(gamrnd(tum_dist_shape, tum_dist_scale, 1),max_run); % Gamma. shape = 1, scale =2. max=max_run
             trajectories(t, animal_zz) = 0; 
         else % RUN 
             turning_angle = vmrand(run_turn_mean, run_turn_var, 1); %vmrand(mean, var, n)
@@ -181,9 +181,9 @@ for animal = 1:num_animals
             break
             % Ends "t" loop. returns to "animal" loop.
         end
-        trajectories(t+1, animal_x : animal_y) = [x2, y2]; %update location
+        trajectories(t+1, animal_x : animal_y) = [x2, y2]; % update location
         trajectories(t+1, animal_z) = grass_consumed;
-        memory(2:end) = memory(1:(n_memories-1)); %update memory
+        memory(2:end) = memory(1:(n_memories-1)); % update memory
         memory(1) = grass_consumed;
    
         
@@ -191,7 +191,7 @@ for animal = 1:num_animals
 end % animal loop
 
 
-%Shorten trajectories array for steps that no animals reached (save memory)
+% Shorten trajectories array for steps that no animals reached (save memory)
 if truncate_trajectories
     longest_trajectory = 0;
     last_step = 1;
@@ -213,44 +213,45 @@ end
 
 
 
-%% Visualization
-if visualize
-% Quantity Plot
-    figure, surf(landscape(:,:,1));
-    hold on
-    zz =transpose(linspace(100,100,length(trajectories(:,2))));
-    for animal = 1:num_animals
-        xx = 4*animal - 3;
-        yy = xx + 1;
-        plot3(trajectories(:,xx,1), trajectories(:,yy,1),zz)
-    end
-    title('ending landscape grass quantity values');
-    hold off
-
-% Nutrition Plot
-    figure, surf(landscape(:,:,2));
-    hold on
-    zz =transpose(linspace(100,100,length(trajectories(:,2))));
-    for animal = 1:num_animals
-        xx = 4*animal - 3;
-        yy = xx + 1;
-        plot3(trajectories(:,xx,1), trajectories(:,yy,1),zz)
-    end
-    title('ending landscape nutrition values');
-    hold off
-
-
-% Dung Plot
-    figure, surf(landscape(:, :, 3));zz =transpose(linspace(100,100,length(trajectories(:,2))));
-    hold on
-    for animal = 1:num_animals
-        xx = 4*animal - 3;
-        yy = xx + 1;
-        plot3(trajectories(:,xx,1), trajectories(:,yy,1),zz)
-    end
-    title('dung location pileups');
-    hold off
-end
+%% Visualization -- commented out so the script runs faster
+% to un-comment, highlight this section and press cmd-T
+% if visualize
+% % Quantity Plot
+%     figure, surf(landscape(:,:,1));
+%     hold on
+%     zz =transpose(linspace(100,100,length(trajectories(:,2))));
+%     for animal = 1:num_animals
+%         xx = 4*animal - 3;
+%         yy = xx + 1;
+%         plot3(trajectories(:,xx,1), trajectories(:,yy,1),zz)
+%     end
+%     title('ending landscape grass quantity values');
+%     hold off
+% 
+% % Nutrition Plot
+%     figure, surf(landscape(:,:,2));
+%     hold on
+%     zz =transpose(linspace(100,100,length(trajectories(:,2))));
+%     for animal = 1:num_animals
+%         xx = 4*animal - 3;
+%         yy = xx + 1;
+%         plot3(trajectories(:,xx,1), trajectories(:,yy,1),zz)
+%     end
+%     title('ending landscape nutrition values');
+%     hold off
+% 
+% 
+% % Dung Plot
+%     figure, surf(landscape(:, :, 3));zz =transpose(linspace(100,100,length(trajectories(:,2))));
+%     hold on
+%     for animal = 1:num_animals
+%         xx = 4*animal - 3;
+%         yy = xx + 1;
+%         plot3(trajectories(:,xx,1), trajectories(:,yy,1),zz)
+%     end
+%     title('dung location pileups');
+%     hold off
+% end
 
 %% Residency File Creation
 
@@ -306,19 +307,30 @@ mkdir(['dfs/' run_ID]);
 % Create a "basename" so that all exported csvs share a common format, in
 % the same folder. 'dfs/' folder is required to exist.
 basename = strcat('dfs/', run_ID, "/", fertilizer_pattern, "_", STRsteps, "_", STRnum_animals, "_");
-
+%basename = strcat('dfs/', "_", run_ID, "_", fertilizer_pattern, "_",  )
 % Output metadata file
     % Create a cell array containing useful simulation parameters
     MTDA = {'run_ID', run_ID;
-            'landscape_ID', landscape_ID;
-            'max_steps', steps;
-            'num_animals', num_animals;
-            'max_feed', max_feed;
+            'fertilizer_pattern', fertilizer_pattern;
+            'mound_radius', mound_radius;
+            'xdim', xdim;
+            'ydim', ydim;
+            'boundary', boundary;
+            'n_mounds', n_mounds;
             'max_grass', max_grass;
-            'max_run', max_run;
+            'max_feed', max_feed;
+            'food_ratio', food_ratio;
+            'num_animals', num_animals;
+            'steps', steps;
+            'able2stop', able2stop;
+            'run4ever', run4ever;
+            'random_walk', random_walk;
             'n_memories', n_memories;
-            };
-      MTDA = cell2table(MTDA, 'VariableNames', {'Parameter', 'Value'});
+            'max_tumble', max_tumble;
+            'max_run', max_run;
+            'grass_consumed', grass_consumed;};
+            
+      MTDA = cell2table(MTDA, 'VariableNames', {'parameter', 'value'});
       writetable(MTDA, strcat(basename, 'metadata.csv'));
 
 % Output .csv files
