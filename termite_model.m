@@ -14,30 +14,29 @@ increases left to right, Y dimension top to bottom.
 %}
 
 %{
-Contents:
-     - Set User-Defined Parameters
-     - Model Script
-     - Model Vizualization
-     - Export Metadata
+Sections:
+     - Define Parameters
+     - Prepare Landscape Library
+     - Run Model
+     - Export Model Data
 %}
 
 
-%% SET USER-DEFINED PARAMETERS:
-    
+%% DEFINE PARAMETERS:
+% Cleanup the workspace
 clearvars
 close all
 
-visualize = false; % automatically v final landscapes with trajectories paths
-truncate_trajectories = true; % truncate rows (steps) of trajectories array that no animals reached
-
-num_animals = 1000; % Number of animals to run? (integer)
-steps = 500; % Max steps that each animal is allotted? (integer)
-landscape_ID = "plot7_79105421";
-
-% Grazing parameters
-feed_time = 1; %relative to total movement time (of 1). Affects how dung distributes
-max_feed = 5; %max amount can feed per turn
+% Presets
+    truncate_trajectories = true; % truncate rows (steps) of trajectories array that no animals reached
+    num_animals = 1000; % Number of animals to run? (integer)
+    steps = 500; % Max steps that each animal is allotted? (integer)
     
+
+    % Grazing parameters
+    feed_time = 1; %relative to total movement time (of 1). Affects how dung distributes
+    max_feed = 5; %max amount can feed per turn
+
 % Movement angle/dist parameters.
 % angles are circular normal from vmrand(mean, var)
 % distances are gamma distribution from gamrnd(shape, scale) < max_run
@@ -45,20 +44,28 @@ tum_turn_mean = pi; % mean tumble
 tum_turn_var = 2; % fKappa tumble
 tum_dist_shape = 1;
 tum_dist_scale = 2;
-run_turn_mean = 0; % mean run
+run_turn_mean = 0; % mean run 
 run_turn_var = 2; % fKappa run
 run_dist_shape = 2; 
 run_dist_scale = 2;
-max_run = 8;
+max_run = 8; % maximum run length
 
 % Parameters for decision-making
 n_memories = 3; % n of steps that animal remembers (for tumble decision)
 tumble_food = 0.6 * max_feed;
-stop_food = 0.8 * max_feed; % used in check_path iff able2stop == TRUE
+stop_food = 0.8 * max_feed; % Used in check_path iff able2stop == TRUE
 able2stop = false; % If true, animals will stop, feed, and end step if they cross a good patch.   
 
+% Create run_ID based off of user-defined parameters
+% in the format {mean tumble}{fKappa tumble}{mean run}{fKappa
+% run}{n_memories}
+% where decimals are rounded to nearest integer
+batch_ID = strcat(num2str(round(tum_turn_mean)), "_", num2str(tum_turn_var), "_", num2str(run_turn_mean), "_", num2str(run_turn_var), "_", num2str(n_memories));
+mkdir(strcat("output/", batch_ID)); % Creates new directory with run_ID as name
 
-%% Load landscape
+%% PREPARE LANDSCAPE LIBRARY
+
+landscape_ID = "plot7_79105421";
 grass_filename = strcat(landscape_ID, "_grass.csv");
 % nutrition_filename = strcat(landscape_ID, "_nutrition.csv");
 % dung_filename = strcat(landscape_ID, "_dung.csv");
@@ -79,8 +86,8 @@ landscape = cat(3, grass_initial, nutrition_initial, dung_initial);
 landscape_over_time = zeros(xdim, ydim, steps);
 dung_over_time = zeros(xdim, ydim, steps);
 
-%%
-% STEP 2: agents move through landscape.
+%% RUN MODEL
+%  Agents move through landscape.
 
 % Record trajectory of all animals. First three columns are first animal,
 % fourth through sixth columns are second animal, etc. x, y coords then
@@ -212,51 +219,11 @@ if truncate_trajectories
 end
 
 
-
-%% Visualization -- commented out so the script runs faster
-% to un-comment, highlight this section and press cmd-T
-% if visualize
-% % Quantity Plot
-%     figure, surf(landscape(:,:,1));
-%     hold on
-%     zz =transpose(linspace(100,100,length(trajectories(:,2))));
-%     for animal = 1:num_animals
-%         xx = 4*animal - 3;
-%         yy = xx + 1;
-%         plot3(trajectories(:,xx,1), trajectories(:,yy,1),zz)
-%     end
-%     title('ending landscape grass quantity values');
-%     hold off
-% 
-% % Nutrition Plot
-%     figure, surf(landscape(:,:,2));
-%     hold on
-%     zz =transpose(linspace(100,100,length(trajectories(:,2))));
-%     for animal = 1:num_animals
-%         xx = 4*animal - 3;
-%         yy = xx + 1;
-%         plot3(trajectories(:,xx,1), trajectories(:,yy,1),zz)
-%     end
-%     title('ending landscape nutrition values');
-%     hold off
-% 
-% 
-% % Dung Plot
-%     figure, surf(landscape(:, :, 3));zz =transpose(linspace(100,100,length(trajectories(:,2))));
-%     hold on
-%     for animal = 1:num_animals
-%         xx = 4*animal - 3;
-%         yy = xx + 1;
-%         plot3(trajectories(:,xx,1), trajectories(:,yy,1),zz)
-%     end
-%     title('dung location pileups');
-%     hold off
-% end
-
-%% Residency File Creation
+%% EXPORT MODEL DATA
+% Residency File Creation
 
 landscape_time_bi = landscape_over_time;
-landscape_time_bi=landscape_time_bi > 50;
+landscape_time_bi=landscape_time_bi > 50; % binarize the landscape
 
 % Reshape the trajectories matrix to be 3D matrix
 % where there are 4 columns: x, y, and fullness, run vs tumble
