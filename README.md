@@ -3,7 +3,6 @@ Agent based model of ungulate grazing amid nutrient-rich termite mounds
 
 Current working script: **termite_model.m**
 
-
 ## Data Generation and Export
 Each individual set of parameters that the user defines is called a "batch" which has a unique batch_ID. Currently the parameters we care about are tum_turn_mean, tum_turn_var, run_turn_mean, run_turn_var, and n_memories. If these values were 3,2,0,2,3, respectively, the batch_ID would then be **3_2_0_2_3**.
 
