@@ -77,6 +77,7 @@ A string of equals signs "================" is displayed to signal that all the 
 ### File Structure
 **Abbreviated tree diagram showing location of exported data**
 **Where h,i,j,k,l are user-defined parameters**
+```
 TeamTermite
 ├── README.md
 ├── R_analysis
@@ -94,3 +95,4 @@ TeamTermite
 │  ├── ...
 │  ├── h_i_j_k_l (batch n)
 └── termite_model.m
+```
