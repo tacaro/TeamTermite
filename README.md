@@ -4,7 +4,7 @@ Agent based model of ungulate grazing amid nutrient-rich termite mounds
 Current working script: **termite_model.m**
 
 ## Data Generation and Export
-Each individual set of parameters that the user defines is called a "batch" which has a unique batch_ID. Currently the parameters we care about are tum_turn_mean, tum_turn_var, run_turn_mean, run_turn_var, and n_memories. If these values were 3,2,0,2,3, respectively, the batch_ID would then be **3_2_0_2_3**.
+Each individual set of parameters that the user defines is called a "batch" which has a unique batch_ID. Currently the parameters we care about are tum_turn_mean, tum_turn_var, run_turn_mean, run_turn_var, n_memories, and seed. If these values were 3,2,0,2,3,1 respectively, the batch_ID would then be **3_2_0_2_3_1**.
 
 For every "batch" of a set of parameters, the script will loop through each landscape to run a single simulation. Each landscape is identified by its landscape ID, `ls_ID`.
 
@@ -22,7 +22,9 @@ Sections:
             ii. Export Model Data
 
 #### 1. Prepare Model
-This section is where parameters are defined. The parameters that we are changing for this set of sweeps are: tum_turn_mean, tum_turn_var, run_turn_mean, run_turn_var, and n_memories. These are used to generate a unique `batch_ID` that governs the file export name. For example, if these values were 3,2,0,2,3, respectively, the batch_ID would then be **3_2_0_2_3**.
+This section is where parameters are defined. The parameters that we are changing for this set of sweeps are: tum_turn_mean, tum_turn_var, run_turn_mean, run_turn_var, n_memories, and seed. These are used to generate a unique `batch_ID` that governs the file export name. For example, if these values were 3,2,0,2,3,1 respectively, the batch_ID would then be **3_2_0_2_3_1**.
+
+The 'seed' or random number generator seed, is defined by setting `seed` to an integer value of the user's choice then defining a random number generator structure `randfunc = rng`. We set the `Seed` field of this struct to the `seed` variable (note lower case) that was defined by the user `randfunc.Seed = seed;`. Finally, we set the MATLAB random number generator to the user-defined struct we just generation.
 
 #### 2. Execute Model
 a. First, runtime measurement is started with a call of the `tic` command. Total runtime for the model is exported in the metadata.csv file.
