@@ -35,7 +35,6 @@ Sections:
     num_animals = 1000; % Number of animals to run? (integer)
     steps = 500; % Max steps that each animal is allotted? (integer)
     wide = true; % Set the landscape mound size: True = wide, False = thin
-    seed = 1;
 
     % Grazing parameters
     feed_time = 1; %relative to total movement time (of 1). Affects how dung distributes
@@ -44,13 +43,17 @@ Sections:
 % Movement angle/dist parameters.
 % angles are circular normal from vmrand(mean, var)
 % distances are gamma distribution from gamrnd(shape, scale) < max_run
+    seed = 1; % SET: User-defined rand function seed
+    randfunc = rng; % Create a random number generator function
+    randfunc.Seed = seed; % Set randfunc seed to user-defined value
+    rng(randfunc) % Set the MATLAB rng to the user-defined randfunc
     tum_turn_mean = pi; % mean tumble
     tum_turn_var = 2; % fKappa tumble
     tum_dist_shape = 1;
     tum_dist_scale = 2;
     run_turn_mean = 0; % mean run 
     run_turn_var = 2; % fKappa run
-    run_dist_shape = 2; 
+    run_dist_shape = 2;
     run_dist_scale = 2;
     max_run = 8; % maximum run length
 
@@ -62,9 +65,9 @@ Sections:
 
 % 1b. GENERATE batch_ID
     % In the format {mean tumble}{fKappa tumble}{mean run}{fKappa
-    % run}{n_memories}
+    % run}{n_memories}{seed}
     % where decimals are rounded to nearest integer
-    batch_ID = strcat(num2str(round(tum_turn_mean)), "_", num2str(tum_turn_var), "_", num2str(run_turn_mean), "_", num2str(run_turn_var), "_", num2str(n_memories));
+    batch_ID = strcat(num2str(round(tum_turn_mean)), "_", num2str(tum_turn_var), "_", num2str(run_turn_mean), "_", num2str(run_turn_var), "_", num2str(n_memories), "_", num2str(seed));
     mkdir(strcat("output/", batch_ID)); % Creates new directory with run_ID as name
     disp(strcat("The batch ID for this run is", " ", batch_ID));
     
