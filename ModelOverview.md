@@ -21,7 +21,7 @@ Parameters with example inputs:
 * Mound radius: 3.5
 
 
-**Animal description:** Agents, referred to from hereon as animals, are on the landscape one at a time. Animals initialize just inside the boundary of the landscape oriented into the landscape at some angle between parallel and perpendicular to the nearest edge. Each time step, an animal moves and then feeds. It decides how to move (run or tumble) based on the grass quantity and nutritional value of its current location and a memory of its previous 3 locations. If the animal tumbles, it moves a distance taken from a gamma distribution  and turns at an angle taken from a circular normal distribution centered on pi. If the animal runs, it moves a distance taken from a gamma distribution with larger maximum  and turns at an angle from a circular normal distribution centered on 0. The amount an animal feeds is a function of the amount of grass at its feeding location.
+**Animal description:** Agents, referred to from hereon as animals, are on the landscape one at a time. Animals initialize just inside the boundary of the landscape oriented into the landscape at some angle between parallel and perpendicular to the nearest edge. Each time step, an animal moves and then feeds. It decides how to move (run or tumble) based on the grass quantity and nutritional value of its current location and a memory of its previous 3 locations. If the animal tumbles, it moves a distance taken from a gamma distribution  and turns at an angle taken from a circular normal distribution centered on pi. If the animal runs, it moves a distance taken from a gamma distribution with the same maximum value as for the tumble, but with a "shape" that gives higher values in that interval, and turns at an angle from a circular normal distribution centered on 0. The amount an animal feeds is a function of the amount of grass at its feeding location. If an animal wanders of the grid, it disappears (leaving dung as it walks off) and the next animal enters.
 
 Parameters:
 * Number of animals: hundreds-thousands (Also possible to use a boolean to let animals enter landscape until the landscape is depleted by some amount and then end the simulation)
@@ -35,21 +35,19 @@ Parameters:
 
 **Decision making and parameters:**
 
-* Animals consume grass at final location each time step and deplete the landscape as a function grass_consumed = grass_here * max_feed / max_grass
-(max_feed) is a set value and max_grass is the starting grass quantity on a mound.)
-* Animal has memory of 3 previous locations. It remembers grass_consumed * nutrition
-* Animal makes decision to run or tumble at each time step based on this memory and the same function grass_consumed * nutrition value for its current location though consumed would not be in the past tense if this were normal English. :)
+* Animals consume grass at final location each time step and deplete the landscape as a function min(grass_here, grass_consumed = max_feed * nutrition * (grass_here / max_grass))
+(max_feed is a set value, max_grass is the starting grass quantity on a mound, nutrition is the nutritional value at that location, and grass_here is the grass quantity at the location.)
+* Animal has memory of grass_consumed at set number of previous locations.
+* Animal makes decision to run or tumble at each time step based on this memory and the same grass_consumed value for its current location though consumed would not be in the past tense if this were normal English. It would be grass_consumable :)
 
 * Animal tumbles if following is true for current location or mean of 3 memory locations:
-*  3 <  nutrition * grass_here * max_feed / max_grass
-(^^The value can be different for current and memory, but both are currently 3).
+*  tumble_food * max_grass <  nutrition * grass_here * max_feed / max_grass
+(tumble_food = 0.6 currently).
 
 * For context, max_feed = 5 and max_grass = 100, so if on a mound (nutrition = 1), this means grass_here > 60
-If off a mound (nutrition = 0.2), this is impossible for the current location, though the exact value could still matter for affecting the mean of the memory.
+If off a mound (nutrition = 0.2), so grass_here cannot > 0.6 is impossible for the current location, though the exact value could still matter for affecting the mean of the memory.
 
 * There is also a boolean to stop when crossing a good patch if able2stop == true. This boolean is very similar and should probably be updated to be the same in the future.
-	
-
 
 
 ****** Implementation Summary *******
