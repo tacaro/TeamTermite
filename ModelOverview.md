@@ -7,9 +7,9 @@ Below is a high level summary of the model and list of parameters, followed by m
 
 
 
-**Landscape description:** The landscape has 3 levels: Grass Quantity, Nutritional Value, and Dung Count. Grass Quantity decreases as animals feed. Nutritional value is static. Both are binary to begin with (high on mounds and low off mounds). Dung tracks animal movement (each turn, each animal leaves 1 unit of dung where it feeds, and 1 unit of dung spread along its movement path). Fertilizer mounds are arranged in the landscape in a random, square grid, or hexagonal grid pattern. The input can be a number of fertile pixels and a mound radius or a number of mounds and a mound radius. The size of the landscape can be modified, but the x and y dimensions must be equal for the square grid and should probably be some reasonable proportion for the hexagonal grid. In both grids, the edge of the allowed region of the landscape has many mounds. We could easily have the grids start some number of pixels inside the boundary. If the landscape is defined with a number of mounds or number of fertile pixels that is impossible given the landscape pattern, mound radius, etc., extra mounds are randomly placed (non-overlapping) and then extra pixels until the parameters are satisfied. So, a 26 mound square grid, for example, would be a 5x5 grid with an extra randomly placed mound.
+**Landscape description:** The landscape has 3 levels: Grass Quantity, Nutritional Value, and Dung Count. Grass Quantity decreases as animals feed. Nutritional value is static. Both are binary to begin with (high on mounds and low off mounds). Dung tracks animal movement (each turn, each animal leaves 1 unit of dung where it feeds, and 1 unit of dung spread along its movement path). Fertilizer mounds are arranged in the landscape in a random, square grid, or hexagonal grid pattern. The input can be a number of fertile pixels and a mound radius or a number of mounds and a mound radius. The size of the landscape can be modified, but the x and y dimensions must be equal for the square grid and should probably be some reasonable proportion for the hexagonal grid. If the landscape is defined with a number of mounds or number of fertile pixels that is impossible given the landscape pattern, mound radius, etc., extra mounds are randomly placed (non-overlapping) and then extra pixels until the parameters are satisfied. So, a 26 mound square grid, for example, would be a 5x5 grid with an extra randomly placed mound.
 
-Parameters:
+Parameters with example inputs:
 * Landscape type: Random, square, hexagonal
 * Size of Landscape: 100x100
 * Starting grass value on mounds: 100
@@ -17,33 +17,26 @@ Parameters:
 (^^nutrition on-mound is 1, no matter starting grass value, so if ratio is 5, nutrition is 1 on-mound and 0.2 off mound. Grass could be 100 and 20.)
 * Number of mounds: 25
 * Number of fertile pixels: 925 (out of 10k)
-(^^Would probably want to keep either # mounds or # pixels constant)
+(^^Want to keep either # mounds or # pixels constant)
 * Mound radius: 3.5
-(^^Note that if radius changes, and we want the number of fertile pixels to remain constant, there will be extra individual fertile pixels randomly placed on the initial landscape for however many pixels remain after fertile_pixels mod (num_mounds * mound_area))
 
 
-
-**Animal description:** Animals are on the landscape one at a time. Each time step, an animal moves and then feeds. It decides how to move (run or tumble) based on the grass quantity and nutritional value of its current location and a memory of its previous 3 locations. If the animal tumbles, it moves a distance taken from a distribution and turns at an angle from pi to -pi. If the animal runs, it moves a distance from a distribution of larger values (not overlapping the tumble distribution) and turns at an angle from a more narrow distribution. The amount an animal feeds is a function of the amount of grass at its feeding location.
+**Animal description:** Agents, referred to from hereon as animals, are on the landscape one at a time. Animals initialize just inside the boundary of the landscape oriented into the landscape at some angle between parallel and perpendicular to the nearest edge. Each time step, an animal moves and then feeds. It decides how to move (run or tumble) based on the grass quantity and nutritional value of its current location and a memory of its previous 3 locations. If the animal tumbles, it moves a distance taken from a gamma distribution  and turns at an angle taken from a circular normal distribution centered on pi. If the animal runs, it moves a distance taken from a gamma distribution with larger maximum  and turns at an angle from a circular normal distribution centered on 0. The amount an animal feeds is a function of the amount of grass at its feeding location.
 
 Parameters:
-* Number of animals: hundreds-thousands (Instead of a number, have previously implemented a boolean to let animals enter landscape until the landscape is depleted by some amount and then end the simulation)
+* Number of animals: hundreds-thousands (Also possible to use a boolean to let animals enter landscape until the landscape is depleted by some amount and then end the simulation)
 * Max number of steps per animal
 * Able2stop: false (if true, animal can stop if it crosses a good patch along its path)
 * Run4ever: false (if true, run steps are infinite until animal leaves landscape or stops on a good patch)
 * random_walk: false (if true, animal moves in a random walk instead of run and tumble)
 * How much dung animal leaves: 1 during move, 1 during feed each step
-* Max Turn Angle: [pi, -pi]
-* Tumble distance step range: [0.5, 2]
-* Run to tumble distance ratio: 4 (So if tumble is [0.5, 2] and ratio is 4, then run is [2, 8]
-* Run to tumble angle ratio: 3
-(So if tumble angles are [-pi, pi] then run angles are [-pi/3, pi/3]
 
 
 
 **Decision making and parameters:**
 
 * Animals consume grass at final location each time step and deplete the landscape as a function grass_consumed = grass_here * max_feed / max_grass
-(max_feed is a set value and max_grass is the starting grass quantity on a mound.)
+(max_feed) is a set value and max_grass is the starting grass quantity on a mound.)
 * Animal has memory of 3 previous locations. It remembers grass_consumed * nutrition
 * Animal makes decision to run or tumble at each time step based on this memory and the same function grass_consumed * nutrition value for its current location though consumed would not be in the past tense if this were normal English. :)
 
@@ -79,9 +72,4 @@ Search strategy options:
 * Run4ever - if true, the animal will move indefinitely on a "run" step unless it crosses a good patch and stops or leaves the boundary.
 * Able2stop - if true, the animal can stop when it crosses a good patch (in check_path function). If false, stops only at end of step or if leaves boundary.
 * random_walk - if true, animal does a true random walk instead of run and tumble.
-
-
-
-Data collection and visualization:
-Lots of stuff!
 
